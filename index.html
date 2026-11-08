@@ -1,0 +1,1522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2B47E0">
+<meta name="robots" content="noindex,nofollow">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Fluent Helper</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;600&display=swap">
+<style>
+/* Layout: phone-first single column; sticky header carrying the CEFR scale, fixed 5-tab bar, cards stacked by task */
+:root{
+  --bg:#F2F4FA;--surface:#FFFFFF;--ink:#151A33;--muted:#596183;--line:#DCE1EE;
+  --accent:#2B47E0;--on-accent:#FFFFFF;--accent-soft:#E6EBFF;
+  --amber:#B97E00;--amber-soft:#FFF2D2;--good:#167A4C;--good-soft:#E0F4E9;--bad:#BD3328;--bad-soft:#FCE7E4;--on-bad:#FFFFFF;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --f-ar:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D1121;--surface:#161B31;--ink:#E7EAF7;--muted:#99A1C3;--line:#2A3152;
+  --accent:#8299FF;--on-accent:#0D1121;--accent-soft:#222A55;
+  --amber:#F2B941;--amber-soft:#3A2F12;--good:#52CC91;--good-soft:#123326;--bad:#FF8577;--bad-soft:#3D1A17;--on-bad:#0D1121;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1121;--surface:#161B31;--ink:#E7EAF7;--muted:#99A1C3;--line:#2A3152;
+  --accent:#8299FF;--on-accent:#0D1121;--accent-soft:#222A55;
+  --amber:#F2B941;--amber-soft:#3A2F12;--good:#52CC91;--good-soft:#123326;--bad:#FF8577;--bad-soft:#3D1A17;--on-bad:#0D1121;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px}
+.top-in{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.brand{font:800 20px/1 var(--f-display);letter-spacing:-.02em;margin:0}
+.brand span{color:var(--accent)}
+.meta{display:flex;align-items:center;gap:10px}
+.scale{display:flex;gap:3px}
+.scale i{font:500 10px/1 var(--f-mono);font-style:normal;padding:5px 4px;border-radius:4px;background:var(--line);color:var(--muted)}
+.scale i.past{background:var(--accent-soft);color:var(--accent)}
+.scale i.on{background:var(--accent);color:var(--on-accent)}
+.streak{display:flex;align-items:center;gap:3px;font:800 15px/1 var(--f-display);color:var(--amber);font-variant-numeric:tabular-nums}
+.streak svg{width:16px;height:16px}
+
+main{max-width:720px;margin:0 auto;display:grid;gap:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 112px}
+
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(4px,env(safe-area-inset-left,0px));padding-right:max(4px,env(safe-area-inset-right,0px))}
+.tabs-in{display:grid;grid-template-columns:repeat(5,1fr);max-width:720px;margin:0 auto}
+.tab{background:none;border:0;padding:9px 2px 11px;display:grid;justify-items:center;gap:3px;color:var(--muted);font:700 11.5px/1 var(--f-body);cursor:pointer}
+.tab svg{width:22px;height:22px}
+.tab[aria-current="page"]{color:var(--accent)}
+
+h1{font:800 clamp(26px,6.4vw,36px)/1.08 var(--f-display);letter-spacing:-.025em;margin:0;text-wrap:balance}
+h2{font:700 19px/1.25 var(--f-display);margin:0;text-wrap:balance}
+h3{font:700 15px/1.3 var(--f-display);margin:0}
+p{margin:0}
+.eyebrow{font:500 11px/1.2 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.ar{font-family:var(--f-ar);direction:rtl;text-align:right;line-height:1.7}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px;min-width:0}
+.hero{display:grid;gap:10px;padding-block:6px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.spread{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:10px;padding:11px 16px;
+  background:var(--accent);color:var(--on-accent);font:700 15px/1 var(--f-body);cursor:pointer;min-height:44px;text-decoration:none}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:var(--accent-soft);color:var(--accent)}
+.btn.line{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.rec{background:var(--bad);color:var(--on-bad)}
+.btn.sm{padding:7px 11px;min-height:36px;font-size:14px}
+.btn svg{width:18px;height:18px}
+.ibtn{width:38px;height:38px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:inline-grid;place-items:center;cursor:pointer;color:var(--accent)}
+.ibtn.xs{width:30px;height:30px}
+.ibtn svg{width:17px;height:17px}
+.ibtn.rec{background:var(--bad);border-color:var(--bad);color:var(--on-bad)}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font:700 13px/1 var(--f-body);cursor:pointer;color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+
+textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font:16px/1.5 var(--f-body);background:var(--bg);color:var(--ink)}
+textarea{min-height:90px;resize:vertical}
+.compose{display:grid;gap:8px}
+
+.steps{display:grid;list-style:none;margin:0;padding:0}
+.step{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.step:first-child{border-top:0}
+.tick{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:var(--on-accent)}
+.tick.done{background:var(--good);border-color:var(--good)}
+.tick svg{width:14px;height:14px}
+.step b{display:block;font-size:15px}
+.step small{color:var(--muted);font-size:13px}
+
+.flash{border:1px solid var(--line);border-radius:16px;padding:22px 18px;display:grid;gap:10px;justify-items:center;text-align:center;background:var(--bg)}
+.flash .word{font:800 clamp(26px,7vw,34px)/1.1 var(--f-display);letter-spacing:-.02em}
+.flash .ex{color:var(--muted)}
+.band{font:500 10px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;border-radius:4px}
+.band.b1{background:var(--good-soft);color:var(--good)}
+.band.b2{background:var(--amber-soft);color:var(--amber)}
+.band.b3{background:var(--bad-soft);color:var(--bad)}
+
+.vlist{display:grid}
+.vrow{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.vrow:first-child{border-top:0}
+.vrow .en{font-weight:700}
+.vrow .sub{grid-column:2;font-size:14px;color:var(--muted)}
+.vrow .ar{grid-column:2;font-size:14px}
+.vrow .acts{grid-row:1/span 3;grid-column:3;display:flex;gap:6px}
+.vrow .ibtn{grid-row:1/span 3}
+.known{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;font:700 12px/1 var(--f-body);cursor:pointer;color:var(--muted)}
+.known[aria-pressed="true"]{background:var(--good-soft);color:var(--good);border-color:var(--good-soft)}
+
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.score-row{display:grid;grid-template-columns:96px 1fr 40px;gap:10px;align-items:center;font-size:14px;font-variant-numeric:tabular-nums}
+
+.chat{display:grid;gap:10px}
+.msg{max-width:88%;display:grid;gap:6px;min-width:0}
+.msg.ai{justify-self:start}
+.msg.me{justify-self:end}
+.bubble{padding:10px 13px;border-radius:14px;line-height:1.5;overflow-wrap:anywhere}
+.ai .bubble{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.me .bubble{background:var(--accent);color:var(--on-accent);border-bottom-right-radius:4px}
+.fix{background:var(--amber-soft);border-radius:10px;padding:9px 11px;font-size:14px;display:grid;gap:4px}
+.fix.blue{background:var(--accent-soft)}
+.fix .lbl{font:500 10px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.fix.blue .lbl{color:var(--accent)}
+.ok-note{font-size:13px;color:var(--good);justify-self:end}
+.typing{color:var(--muted);font-style:italic;font-size:14px}
+
+.sent{font:700 18px/1.45 var(--f-body)}
+.words{display:flex;flex-wrap:wrap;gap:4px 6px;font-size:16px}
+.w{padding:1px 6px;border-radius:5px}
+.w.ok{background:var(--good-soft);color:var(--good)}
+.w.miss{background:var(--bad-soft);color:var(--bad);text-decoration:underline wavy}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;font:700 12px/1 var(--f-body);white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.mid{background:var(--amber-soft);color:var(--amber)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.ipa{font:400 14px/1.6 var(--f-mono);color:var(--muted);overflow-wrap:anywhere}
+
+.notice{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--muted);display:grid;gap:4px}
+.err{color:var(--bad);font-size:14px}
+.pairs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.pair{border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:6px;align-content:start}
+.pair .sound{font:500 12px/1 var(--f-mono);color:var(--accent)}
+.pair .ws{display:flex;gap:6px;flex-wrap:wrap}
+.pair button{border:0;background:var(--accent-soft);color:var(--accent);border-radius:7px;padding:6px 9px;font:700 14px var(--f-body);cursor:pointer}
+
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.topic{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:14px;display:grid;gap:4px;text-align:left;cursor:pointer;align-content:start}
+.topic .f{font:500 10px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.topic b{font:700 16px/1.25 var(--f-display)}
+.topic .ar{font-size:13px;color:var(--muted)}
+.topic .meter{height:4px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:6px}
+.topic .meter i{display:block;height:100%;background:var(--good)}
+.topic.today{border-color:var(--accent)}
+
+.opts{display:grid;gap:8px}
+.opt{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px 14px;text-align:left;cursor:pointer;font:16px/1.4 var(--f-body)}
+.opt:hover{border-color:var(--accent)}
+
+.big-level{font:800 64px/1 var(--f-display);letter-spacing:-.04em;color:var(--accent)}
+.days{display:grid;grid-template-columns:repeat(14,1fr);gap:4px}
+.day{aspect-ratio:1;max-width:100%;border-radius:5px;background:var(--line)}
+.day.part{background:var(--accent-soft)}
+.day.full{background:var(--accent)}
+.day.today{outline:2px solid var(--amber);outline-offset:1px}
+.progress{height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stats div{display:grid;gap:2px}
+.stats b{font:800 26px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.stats small{color:var(--muted);font-size:13px}
+.feat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.feat div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:3px}
+.feat b{font:700 15px var(--f-display)}
+.feat small{color:var(--muted);font-size:13px}
+ul.plain{margin:0;padding-left:18px;display:grid;gap:4px}
+label.chk{display:flex;gap:8px;align-items:flex-start;font-size:15px}
+label.chk input{margin-top:4px;width:18px;height:18px;flex:none}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}.progress i{transition:none}}
+@media (max-width:420px){.scale i{padding:5px 3px}.feat{grid-template-columns:1fr}.tab{font-size:10.5px}}
+</style>
+
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <p class="brand">Fluent<span>Helper</span></p>
+  <div class="meta" id="meta"></div>
+</div></header>
+
+<main id="app" aria-live="polite"></main>
+
+<nav class="tabs" aria-label="Sections"><div class="tabs-in">
+  <button class="tab" data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg>Today</button>
+  <button class="tab" data-tab="talk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>Talk</button>
+  <button class="tab" data-tab="pron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg>Pronounce</button>
+  <button class="tab" data-tab="topics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>Topics</button>
+  <button class="tab" data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progress</button>
+</div></nav>
+
+<script>
+/* Fluent Helper — built-in library. v: [english, arabic, band 1-3, example]  ph: [english, arabic]  dlg lines: ["t"=them | "y"=you, text] */
+const TOPICS=[
+{id:"daily",field:"Everyday life",title:"Daily routine",ar:"الروتين اليومي",
+v:[["wake up","يصحى من النوم",1,"I usually wake up at seven."],["commute","المشوار للشغل",2,"My commute takes about forty minutes."],["chores","أعمال البيت",2,"We share the chores at the weekend."],["grab a bite","ياكل حاجة سريعة",2,"Let's grab a bite before the meeting."],["take a nap","ياخد قيلولة",1,"I sometimes take a nap after lunch."],["get ready","يجهز نفسه",1,"It takes me twenty minutes to get ready."],["tidy up","يرتب",1,"Can you tidy up your room, please?"],["run errands","يخلّص مشاوير",2,"I run errands on Saturday morning."],["unwind","يفصل ويرتاح",3,"I unwind by reading before bed."],["hectic","مزحوم ومتلخبط",3,"Mondays are always hectic for me."],["stick to a routine","يلتزم بروتين",3,"It's hard to stick to a routine during Ramadan."],["oversleep","ينام زيادة",2,"I overslept and missed the bus."]],
+ph:[["What does a normal day look like for you?","يومك العادي شكله إيه؟"],["I'm usually up by seven.","عادة بكون صاحي الساعة سبعة."],["I try to get to bed before midnight.","بحاول أنام قبل نص الليل."],["It depends on the day.","على حسب اليوم."],["My mornings are pretty busy.","الصبح عندي مشغول جدًا."],["I like to keep weekends free.","بحب أسيب الويك إند فاضي."]],
+dlg:{title:"Talking about your day",you:"yourself",them:"a new friend",lines:[["t","So what does a normal day look like for you?"],["y","I usually wake up at seven and get ready for work."],["t","Nice. How long is your commute?"],["y","It takes about forty minutes by car, sometimes more."],["t","That's long! What do you do after work?"],["y","I go to the gym or spend time with my family."],["t","And weekends?"],["y","I run errands on Saturday and relax on Friday."]]},
+pron:["I usually wake up at seven on weekdays.","My commute takes about forty minutes.","I prefer to run errands in the morning.","I unwind by reading before I go to bed."],
+ch:["Describe your normal weekday from morning to night.","How has your daily routine changed in the last five years, and is it better now?"]},
+
+{id:"smalltalk",field:"Social",title:"Small talk & making friends",ar:"دردشة وتعارف",
+v:[["nice to meet you","تشرفنا",1,"Hi, I'm Sara. Nice to meet you."],["What do you do?","بتشتغل إيه؟",1,"So, what do you do?"],["hang out","يخرج مع حد",1,"We hang out every Thursday."],["catch up","يتقابلوا ويعرفوا أخبار بعض",2,"Let's catch up over coffee soon."],["get along","يتفاهموا",2,"I get along well with my neighbours."],["have a lot in common","بينهم حاجات مشتركة كتير",2,"We have a lot in common."],["break the ice","يكسر الحاجز",3,"A joke can help break the ice."],["keep in touch","يفضلوا على تواصل",2,"Let's keep in touch."],["acquaintance","معرفة (مش صاحب قريب)",3,"He's more of an acquaintance than a friend."],["What brings you here?","إيه اللي جابك هنا؟",2,"So, what brings you here tonight?"],["awkward silence","سكوت محرج",3,"There was an awkward silence."],["small world","الدنيا صغيرة",2,"You know Ahmed too? It's a small world!"]],
+ph:[["How do you know the host?","تعرف صاحب العزومة منين؟"],["Have you been here before?","جيت هنا قبل كده؟"],["That sounds interesting! Tell me more.","ده شكله مثير، احكيلي أكتر."],["I don't think we've met.","مش فاكر إننا اتقابلنا."],["It was great talking to you.","اتبسطت إني اتكلمت معاك."],["Let's swap numbers.","يلا نبدّل الأرقام."]],
+dlg:{title:"Meeting someone at an event",you:"a guest at an event",them:"another guest",lines:[["t","Hi! I don't think we've met. I'm Omar."],["y","Hi Omar, nice to meet you. I'm Ahmed."],["t","So, how do you know the host?"],["y","We worked together a few years ago."],["t","Oh really? What do you do now?"],["y","I work in sales for a technology company."],["t","That sounds interesting. Do you enjoy it?"],["y","Yes, I do. I meet a lot of new people every week."]]},
+pron:["Hi, I don't think we've met before.","What brings you here this evening?","We have a lot in common, actually.","It was really nice talking to you."],
+ch:["Introduce yourself to a new person at a party.","What makes small talk easy or difficult for you, and how could you get better at it?"]},
+
+{id:"work",field:"Work",title:"Office & meetings",ar:"المكتب والاجتماعات",
+v:[["agenda","جدول أعمال الاجتماع",2,"Let's go through the agenda."],["deadline","آخر ميعاد للتسليم",1,"The deadline is Thursday."],["colleague","زميل",1,"My colleague will join us."],["update","تحديث / آخر الأخبار",1,"Can you give us a quick update?"],["follow up","يتابع",2,"I'll follow up by email."],["action item","مهمة مطلوبة",3,"Let's list the action items."],["on track","ماشي حسب الخطة",2,"The project is on track."],["behind schedule","متأخر عن الجدول",2,"We're a week behind schedule."],["prioritise","يرتب الأولويات",3,"We need to prioritise the client work."],["wrap up","يختم",2,"Let's wrap up in five minutes."],["take the lead","يمسك القيادة",3,"Mona will take the lead on this."],["circle back","يرجع للموضوع بعدين",3,"Let's circle back to budget later."]],
+ph:[["Let's get started.","يلا نبدأ."],["Could you walk us through it?","ممكن تشرحلنا خطوة خطوة؟"],["Sorry to interrupt, but...","آسف إني بقاطع، بس..."],["I'd like to add something.","حابب أضيف حاجة."],["Can we take this offline?","ممكن نكمل الموضوع ده بعد الاجتماع؟"],["So, to sum up...","فباختصار..."]],
+dlg:{title:"Weekly team meeting",you:"a team member",them:"your manager",lines:[["t","Thanks everyone. Could you give us a quick update on your project?"],["y","Sure. We finished the first phase last week."],["t","Great. Are we still on track for the deadline?"],["y","Mostly, but we're a few days behind on testing."],["t","What do you need to catch up?"],["y","One more developer for a week would really help."],["t","OK, I'll check with the team. Anything else?"],["y","No, that's all. I'll follow up by email today."]]},
+pron:["Could you give us a quick update?","We're a few days behind schedule.","I'll follow up with an email this afternoon.","Let's prioritise the client's requests."],
+ch:["Give a short update on something you are working on.","Your project is late. Explain why to your manager and suggest a solution."]},
+
+{id:"sales",field:"Business",title:"Sales & negotiation",ar:"المبيعات والتفاوض",
+v:[["client","عميل",1,"The client wants a demo."],["price","سعر",1,"What's the best price you can offer?"],["discount","خصم",1,"Can you give us a discount?"],["proposal","عرض مكتوب",2,"I'll send the proposal tomorrow."],["decision-maker","صاحب القرار",2,"Who is the decision-maker?"],["pain point","مشكلة بيعاني منها العميل",3,"What's their biggest pain point?"],["objection","اعتراض",3,"How do you handle price objections?"],["close a deal","يقفل صفقة",2,"We closed the deal last month."],["budget","ميزانية",1,"What's your budget this year?"],["value","قيمة",2,"Let me explain the value for your team."],["meet halfway","يتقابلوا في النص",3,"Can we meet halfway on the price?"],["return on investment (ROI)","العائد على الاستثمار",3,"The ROI comes within six months."]],
+ph:[["What challenges are you facing right now?","إيه التحديات اللي بتواجهك دلوقتي؟"],["Would it make sense to set up a demo?","ينفع نعمل ديمو؟"],["I understand your concern.","فاهم قلقك."],["What would it take to move forward?","محتاجين إيه عشان نكمل؟"],["That's the best I can do.","ده أحسن عرض أقدر أقدمه."],["Let me check and get back to you.","هراجع وأرجعلك."]],
+dlg:{title:"Handling a price objection",you:"a salesperson",them:"a client",lines:[["t","Your solution looks good, but honestly the price is too high."],["y","I understand your concern. Can I ask what you're comparing it with?"],["t","Another vendor offered something similar for twenty percent less."],["y","That's fair. Does their offer include support and training?"],["t","No, those are extra."],["y","So when you add those, our price is very close. And the ROI comes in six months."],["t","OK, but can you do anything on the price?"],["y","If you sign for two years, I can offer a ten percent discount."]]},
+pron:["What challenges are you facing right now?","I understand your concern about the price.","Would it make sense to set up a short demo?","We can meet halfway if you sign this month."],
+ch:["Pitch a product you know in four sentences.","A client says your price is too high. Respond and protect the deal without dropping your price too much."]},
+
+{id:"interview",field:"Career",title:"Job interviews",ar:"مقابلات العمل",
+v:[["experience","خبرة",1,"I have five years of experience."],["strength","نقطة قوة",1,"My main strength is communication."],["weakness","نقطة ضعف",1,"My weakness is that I'm too detail-focused."],["responsible for","مسؤول عن",2,"I was responsible for twenty clients."],["achievement","إنجاز",2,"My biggest achievement was a new contract."],["team player","بيحب يشتغل في فريق",2,"I'm a real team player."],["salary expectations","الراتب المتوقع",2,"What are your salary expectations?"],["notice period","مدة الإخطار قبل ترك الشغل",3,"My notice period is one month."],["handle pressure","يتعامل مع الضغط",2,"I handle pressure well."],["career goals","أهداف مهنية",2,"My career goal is to lead a team."],["exceed targets","يتخطى التارجت",3,"I exceeded my targets every quarter."],["transferable skills","مهارات تنفع في أي مجال",3,"Sales gave me many transferable skills."]],
+ph:[["Tell me about yourself.","احكيلي عن نفسك."],["Why do you want this job?","ليه عايز الوظيفة دي؟"],["In my previous role, I...","في شغلي اللي فات، أنا..."],["I'm looking for a new challenge.","بدور على تحدي جديد."],["Where do you see yourself in five years?","شايف نفسك فين بعد خمس سنين؟"],["Do you have any questions for us?","عندك أي أسئلة لينا؟"]],
+dlg:{title:"First interview",you:"a job candidate",them:"an interviewer",lines:[["t","Thanks for coming in. Could you tell me a bit about yourself?"],["y","Sure. I've worked in account management for seven years."],["t","What was your biggest achievement in that role?"],["y","I grew my main account by forty percent in two years."],["t","Impressive. Why are you looking for a new role?"],["y","I'm looking for a new challenge and a chance to lead a team."],["t","What would you say is your main weakness?"],["y","I sometimes take on too much, so I'm learning to delegate."]]},
+pron:["I have seven years of experience in sales.","I'm looking for a new challenge.","My biggest achievement was a forty percent growth.","I exceeded my targets every quarter."],
+ch:["Answer: Tell me about yourself.","Describe a difficult situation at work and how you handled it (situation, action, result)."]},
+
+{id:"email",field:"Work",title:"Phone calls & emails",ar:"المكالمات والإيميلات",
+v:[["call back","يرجع يتصل",1,"Can you call me back later?"],["hold on","استنى لحظة",1,"Hold on, please."],["put through","يحوّل المكالمة",2,"I'll put you through to sales."],["leave a message","يسيب رسالة",1,"Would you like to leave a message?"],["attachment","مرفق",1,"Please see the attachment."],["regarding","بخصوص",2,"I'm writing regarding your order."],["reach out","يتواصل",2,"Thanks for reaching out."],["confirm","يأكد",1,"Please confirm the time."],["at your earliest convenience","في أقرب وقت يناسبك",3,"Please reply at your earliest convenience."],["cc","يحط في نسخة",2,"I'll cc my manager."],["breaking up","الصوت بيقطع",2,"Sorry, you're breaking up."],["as discussed","زي ما اتفقنا",3,"As discussed, here is the file."]],
+ph:[["Hello, this is Ahmed from...","ألو، معاك أحمد من..."],["Could I speak to...?","ممكن أكلم...؟"],["Sorry, could you repeat that?","آسف، ممكن تعيد؟"],["I'm calling about...","بتصل بخصوص..."],["I look forward to hearing from you.","مستني ردك."],["Please let me know if you have any questions.","لو عندك أي أسئلة عرفني."]],
+dlg:{title:"Calling a company",you:"a caller",them:"a receptionist",lines:[["t","Good morning, Delta Systems. How can I help you?"],["y","Hello, this is Ahmed. Could I speak to Ms Hana, please?"],["t","I'm afraid she's in a meeting. Can I take a message?"],["y","Yes, please. I'm calling about the proposal I sent on Monday."],["t","Sure. Could you spell your name for me?"],["y","Of course. A-H-M-E-D."],["t","Thank you. And your number?"],["y","It's 0100 234 5678. Please ask her to call me back today."]]},
+pron:["Could I speak to Ms Hana, please?","I'm calling about the proposal I sent.","Sorry, you're breaking up a little.","I look forward to hearing from you."],
+ch:["Leave a phone message asking a colleague to call you back.","Say the email you would write to apologise for a late delivery and give a new date."]},
+
+{id:"tech",field:"Technology",title:"Technology & IT",ar:"التكنولوجيا والـ IT",
+v:[["download","ينزّل",1,"Download the app from the store."],["password","كلمة السر",1,"I forgot my password."],["update","تحديث",1,"Install the latest update."],["crash","يقع / يهنج",2,"The system crashed this morning."],["data","بيانات",1,"We store the data in the cloud."],["cloud","السحابة",2,"Our files are on the cloud."],["integrate","يربط / يدمج",3,"It integrates with SAP."],["security breach","اختراق أمني",3,"There was a security breach last year."],["user-friendly","سهل الاستخدام",2,"The app is very user-friendly."],["back up","ياخد نسخة احتياطية",2,"Back up your files every week."],["troubleshoot","يحل مشكلة تقنية",3,"IT is troubleshooting the issue."],["real-time","لحظي",3,"We need real-time data."]],
+ph:[["Have you tried restarting it?","جربت تعمله ريستارت؟"],["It's not working properly.","مش شغال كويس."],["Can you share your screen?","ممكن تشير الشاشة؟"],["The system is down.","السيستم واقع."],["It's compatible with...","متوافق مع..."],["Let me log a ticket.","خليني أفتح تيكت."]],
+dlg:{title:"Calling IT support",you:"an employee",them:"an IT support agent",lines:[["t","IT support, how can I help?"],["y","Hi, my laptop keeps crashing when I open the sales system."],["t","I see. Have you tried restarting it?"],["y","Yes, twice, but it still crashes after a few minutes."],["t","OK. Can you share your screen so I can take a look?"],["y","Sure, I'm sharing it now. Can you see it?"],["t","Yes. It looks like you need the latest update. I'll install it."],["y","Great, thanks. How long will it take?"]]},
+pron:["My laptop keeps crashing every morning.","Can you share your screen, please?","The platform integrates with your existing systems.","Please back up your files every week."],
+ch:["Explain a technical problem you had and how it was fixed.","Explain how a piece of technology you use at work saves time or money."]},
+
+{id:"finance",field:"Money",title:"Banking & money",ar:"البنوك والفلوس",
+v:[["account","حساب",1,"I want to open an account."],["cash","كاش",1,"Can I pay in cash?"],["withdraw","يسحب",1,"I need to withdraw some money."],["transfer","تحويل",1,"I made a transfer yesterday."],["fee","رسوم",2,"Is there a fee for this card?"],["loan","قرض",2,"They applied for a car loan."],["interest rate","سعر الفايدة",2,"The interest rate is high now."],["instalment","قسط",2,"I pay in twelve instalments."],["exchange rate","سعر الصرف",2,"What's the exchange rate today?"],["afford","يقدر يتحمل التمن",2,"We can't afford a new car."],["inflation","التضخم",3,"Inflation pushed prices up."],["save up","يحوّش",2,"I'm saving up for a holiday."]],
+ph:[["I'd like to open an account.","حابب أفتح حساب."],["My card isn't working.","الكارت بتاعي مش شغال."],["How much is the fee?","الرسوم كام؟"],["Can I pay in instalments?","ينفع أدفع بالتقسيط؟"],["It's within my budget.","في حدود ميزانيتي."],["Prices have gone up a lot.","الأسعار زادت جدًا."]],
+dlg:{title:"At the bank",you:"a customer",them:"a bank employee",lines:[["t","Good afternoon. How can I help you today?"],["y","Hi, my card isn't working at the ATM."],["t","Let me check. Did you enter the wrong PIN?"],["y","Maybe. I think I entered it wrong three times."],["t","That's why it's blocked. I can unblock it for you now."],["y","Thank you. Is there a fee for that?"],["t","No, it's free. Anything else?"],["y","Yes, I'd also like to ask about car loans."]]},
+pron:["I'd like to withdraw some cash, please.","Is there a fee for international transfers?","What's the exchange rate today?","I'm saving up for a new car."],
+ch:["Explain how you manage your money each month.","Should people use credit cards or avoid them? Give your opinion with reasons."]},
+
+{id:"travel",field:"Travel",title:"Airport & travel",ar:"المطار والسفر",
+v:[["passport","باسبور",1,"Here's my passport."],["boarding pass","كارت الصعود للطيارة",1,"Please show your boarding pass."],["luggage","شنط",1,"How much luggage do you have?"],["check in","يعمل تشيك إن",1,"Where do I check in?"],["gate","البوابة",1,"The flight leaves from gate 12."],["delay","تأخير",1,"There's a two-hour delay."],["aisle seat","كرسي جنب الممر",2,"Could I have an aisle seat?"],["layover","ترانزيت",2,"We have a layover in Dubai."],["carry-on","شنطة اليد",2,"Is this OK as carry-on?"],["customs","الجمارك",2,"We went through customs quickly."],["miss a flight","تفوته الطيارة",2,"I almost missed my flight."],["itinerary","خط سير الرحلة",3,"I'll email you the itinerary."]],
+ph:[["Where is the check-in desk for...?","فين مكتب التشيك إن لرحلة...؟"],["Is the flight on time?","الرحلة في ميعادها؟"],["Could I have a window seat?","ممكن كرسي جنب الشباك؟"],["How long is the layover?","الترانزيت قد إيه؟"],["I'm here on business.","أنا هنا في شغل."],["My bag didn't arrive.","شنطتي موصلتش."]],
+dlg:{title:"Checking in for a flight",you:"a traveller",them:"a check-in agent",lines:[["t","Good morning! Where are you flying to today?"],["y","Good morning. I'm flying to Riyadh."],["t","Can I see your passport, please?"],["y","Here you are."],["t","Thank you. Do you have any bags to check in?"],["y","Just one suitcase. This small bag is my carry-on."],["t","Would you like a window or an aisle seat?"],["y","An aisle seat, please. Is the flight on time?"]]},
+pron:["Could I have an aisle seat, please?","We have a three-hour layover in Dubai.","Is the flight to Riyadh on time?","I'm travelling on business this week."],
+ch:["Describe the last trip you took.","Your flight is cancelled and you have an important meeting tomorrow. Talk to the airline agent."]},
+
+{id:"hotel",field:"Travel",title:"Hotel & restaurant",ar:"الفندق والمطعم",
+v:[["reservation","حجز",1,"I have a reservation for two nights."],["menu","المنيو",1,"Can I see the menu?"],["bill","الحساب",1,"Could we have the bill, please?"],["room service","خدمة الغرف",2,"I ordered room service."],["check out","يسيب الفندق",1,"What time is check-out?"],["vegetarian","نباتي",2,"Do you have vegetarian dishes?"],["recommend","يرشّح",2,"What do you recommend?"],["tip","بقشيش",2,"Is the tip included?"],["booked up","محجوز بالكامل",3,"Sorry, we're fully booked up."],["spicy","حراق",1,"Is this dish spicy?"],["complimentary","مجاني (هدية)",3,"Breakfast is complimentary."],["allergic to","عنده حساسية من",2,"I'm allergic to nuts."]],
+ph:[["I'd like to book a table for four.","حابب أحجز ترابيزة لأربعة."],["I'll have the grilled chicken.","هاخد الفراخ المشوية."],["Could I get this without onions?","ممكن من غير بصل؟"],["The air conditioning isn't working.","التكييف مش شغال."],["Could I have a late check-out?","ممكن أخرج متأخر؟"],["Everything was delicious.","كل حاجة كانت حلوة جدًا."]],
+dlg:{title:"Ordering at a restaurant",you:"a customer",them:"a waiter",lines:[["t","Good evening. Are you ready to order?"],["y","Almost. What do you recommend?"],["t","The grilled fish is very popular today."],["y","Sounds good. Is it spicy?"],["t","A little, but we can make it mild."],["y","Mild, please. And a fresh orange juice."],["t","Of course. Anything else?"],["y","No, thanks. Could we have the bill after that?"]]},
+pron:["I'd like to book a table for four people.","Could I get this without onions?","Is breakfast included in the price?","Everything was absolutely delicious."],
+ch:["Order a full meal for you and a friend.","Your hotel room is noisy and dirty. Complain politely and ask for a solution."]},
+
+{id:"shopping",field:"Everyday life",title:"Shopping & returns",ar:"الشراء والترجيع",
+v:[["size","مقاس",1,"Do you have this in a larger size?"],["try on","يقيس",1,"Can I try this on?"],["receipt","فاتورة / إيصال",1,"Do you have the receipt?"],["refund","استرجاع الفلوس",2,"I'd like a refund."],["exchange","يبدّل",2,"Can I exchange it for another colour?"],["on sale","عليه تخفيض",1,"These shoes are on sale."],["out of stock","خلصان",2,"Sorry, it's out of stock."],["warranty","ضمان",2,"It has a two-year warranty."],["faulty","فيه عيب",3,"The charger is faulty."],["bargain","لقطة",2,"That's a real bargain."],["store credit","رصيد في المحل",3,"We can only give store credit."],["fitting room","غرفة القياس",1,"The fitting room is on the left."]],
+ph:[["I'm just looking, thanks.","بتفرج بس، شكرًا."],["How much is this?","ده بكام؟"],["Do you have it in blue?","موجود أزرق؟"],["It doesn't fit.","مش مقاسي."],["I'd like to return this.","عايز أرجّع ده."],["Can I pay by card?","ينفع أدفع بالكارت؟"]],
+dlg:{title:"Returning a product",you:"a customer",them:"a shop assistant",lines:[["t","Hi there. How can I help?"],["y","Hi, I'd like to return these headphones."],["t","Of course. What's wrong with them?"],["y","They're faulty. The left side doesn't work."],["t","I'm sorry about that. Do you have the receipt?"],["y","Yes, here it is. I bought them last week."],["t","Would you like a refund or an exchange?"],["y","A refund, please. Can you put it back on my card?"]]},
+pron:["Can I try this on in a larger size?","I'd like to return these faulty headphones.","Is this jacket still on sale?","It comes with a two-year warranty."],
+ch:["Ask a shop assistant about a phone you want to buy.","Is online shopping better than shopping in stores? Explain your view."]},
+
+{id:"health",field:"Health",title:"Health & the doctor",ar:"الصحة والدكتور",
+v:[["headache","صداع",1,"I have a terrible headache."],["fever","سخونية",1,"My son has a fever."],["appointment","ميعاد",1,"I'd like to make an appointment."],["prescription","روشتة",2,"The doctor gave me a prescription."],["painkiller","مسكن",2,"Take a painkiller after food."],["sore throat","التهاب في الزور",1,"I've had a sore throat for days."],["symptoms","أعراض",2,"What are your symptoms?"],["side effects","آثار جانبية",3,"Are there any side effects?"],["check-up","كشف دوري",2,"I go for a check-up every year."],["recover","يخف",2,"It took a week to recover."],["sprain","التواء",3,"I sprained my ankle playing football."],["get some rest","يرتاح",1,"You should get some rest."]],
+ph:[["I don't feel well.","مش حاسس إني كويس."],["It hurts here.","بيوجعني هنا."],["How often should I take it?","آخده كل قد إيه؟"],["I've had it for three days.","بقالي ثلاث أيام كده."],["Is it serious?","الموضوع خطير؟"],["I feel much better now.","بقيت أحسن كتير."]],
+dlg:{title:"At the doctor's",you:"a patient",them:"a doctor",lines:[["t","Hello. What seems to be the problem?"],["y","I've had a sore throat and a fever for three days."],["t","I see. Do you have a headache too?"],["y","Yes, especially in the morning."],["t","Let me take a look. Open your mouth, please."],["y","OK. Is it serious?"],["t","No, it's a throat infection. I'll give you a prescription."],["y","Thank you. How often should I take the medicine?"]]},
+pron:["I've had a sore throat for three days.","How often should I take this medicine?","Are there any side effects?","You should get some rest and drink water."],
+ch:["Describe how you feel to a doctor when you have the flu.","What do you do to stay healthy, and what would you like to improve?"]},
+
+{id:"housing",field:"Everyday life",title:"Renting & home repairs",ar:"الإيجار والتصليحات",
+v:[["rent","إيجار",1,"The rent is due on the first."],["landlord","صاحب الشقة",2,"I called the landlord about the leak."],["furnished","مفروشة",2,"Is the flat furnished?"],["leak","تسريب",2,"There's a leak in the kitchen."],["deposit","تأمين",2,"The deposit is two months' rent."],["lease","عقد إيجار",3,"I signed a one-year lease."],["neighbourhood","الحي / المنطقة",1,"It's a quiet neighbourhood."],["plumber","سباك",2,"We need a plumber."],["electrician","كهربائي",2,"The electrician is coming tomorrow."],["broken","بايظ",1,"The washing machine is broken."],["move in","يسكن / ينقل",1,"We move in next month."],["utilities","المرافق (مية وكهربا وغاز)",3,"Are utilities included?"]],
+ph:[["Is it still available?","لسه متاحة؟"],["How much is the rent?","الإيجار كام؟"],["Are bills included?","الفواتير داخلة؟"],["Something is wrong with the...","فيه مشكلة في..."],["When can you fix it?","تقدر تصلحها إمتى؟"],["Can I see the flat this weekend?","ممكن أشوف الشقة الويك إند ده؟"]],
+dlg:{title:"Calling about a flat",you:"someone looking for a flat",them:"a landlord",lines:[["t","Hello, you called about the flat?"],["y","Yes. Is it still available?"],["t","It is. It's a two-bedroom flat near the metro."],["y","Great. How much is the rent?"],["t","Twelve thousand pounds a month, plus utilities."],["y","Is it furnished?"],["t","Partly. There's a kitchen, beds and a sofa."],["y","Can I see it this weekend?"]]},
+pron:["Is the flat still available?","There's a leak under the kitchen sink.","Are the utilities included in the rent?","We're planning to move in next month."],
+ch:["Describe your home and your neighbourhood.","Is it better to rent or to buy a home in your city? Explain."]},
+
+{id:"education",field:"Learning",title:"Study & learning",ar:"المذاكرة والتعلم",
+v:[["course","كورس",1,"I'm taking an English course."],["homework","واجب",1,"Did you do your homework?"],["exam","امتحان",1,"The exam is next week."],["pass","ينجح",1,"She passed all her exams."],["fail","يسقط",1,"He failed the test."],["degree","شهادة جامعية",2,"I have a degree in commerce."],["fluent","بيتكلم بطلاقة",2,"I want to be fluent in English."],["improve","يحسّن",1,"I want to improve my speaking."],["revise","يراجع",2,"I need to revise for the test."],["self-taught","اتعلم لوحده",3,"He's a self-taught programmer."],["practise","يتمرن",1,"Practise a little every day."],["make progress","يتقدم",2,"You're making good progress."]],
+ph:[["How long have you been learning?","بقالك قد إيه بتتعلم؟"],["I find grammar difficult.","الجرامر صعب عليّا."],["Could you explain that again?","ممكن تشرحها تاني؟"],["What does this word mean?","الكلمة دي معناها إيه؟"],["How do you pronounce this?","بتنطقها إزاي؟"],["I learn best by speaking.","أحسن طريقة بتعلم بيها هي الكلام."]],
+dlg:{title:"Talking to a teacher",you:"a student",them:"an English teacher",lines:[["t","Hi! How's your English going?"],["y","Better, but I still find speaking difficult."],["t","That's normal. What's the hardest part for you?"],["y","I know the words, but I can't find them quickly."],["t","How often do you practise speaking?"],["y","Not very often, maybe once a week."],["t","Try ten minutes every day. It makes a big difference."],["y","OK, I'll try that. Can you recommend any podcasts?"]]},
+pron:["I want to improve my speaking skills.","How do you pronounce this word?","You're making very good progress.","I practise for ten minutes every day."],
+ch:["Explain why you want to improve your English.","Describe the best way to learn a language, in your opinion, and why."]},
+
+{id:"hobbies",field:"Free time",title:"Sport, hobbies & free time",ar:"الرياضة والهوايات",
+v:[["hobby","هواية",1,"My hobby is photography."],["work out","يتمرن",1,"I work out three times a week."],["match","ماتش",1,"Did you watch the match?"],["team","فريق",1,"Which team do you support?"],["score a goal","يجيب جون",2,"Salah scored a great goal."],["take up","يبدأ هواية جديدة",3,"I took up swimming last year."],["be into","بيحب جدًا",2,"I'm really into cooking."],["free time","وقت فاضي",1,"What do you do in your free time?"],["relaxing","مريح",1,"Fishing is very relaxing."],["get fit","يبقى فورمة",2,"I want to get fit this year."],["binge-watch","يتفرج على مسلسل كله مرة واحدة",3,"I binge-watched the whole series."],["outdoors","في الهوا الطلق",2,"I prefer being outdoors."]],
+ph:[["What do you do for fun?","بتعمل إيه للترفيه؟"],["I'm a big fan of...","أنا بحب... جدًا"],["Did you see the game last night?","شفت الماتش إمبارح؟"],["I'm not really into...","مش بحب... أوي"],["We should play together sometime.","لازم نلعب مع بعض مرة."],["It helps me relax.","بيساعدني أرتاح."]],
+dlg:{title:"Talking about the weekend",you:"yourself",them:"a colleague",lines:[["t","Did you do anything fun at the weekend?"],["y","Yes, I played football with some friends on Friday."],["t","Nice! Do you play every week?"],["y","I try to, but sometimes I'm too busy."],["t","Did you see the match on Saturday?"],["y","Of course! Salah scored a great goal."],["t","I know! What else do you do in your free time?"],["y","I'm really into cooking. It helps me relax."]]},
+pron:["I work out three times a week.","I'm really into cooking these days.","Did you see the match last night?","I took up swimming last summer."],
+ch:["Talk about your favourite hobby.","Why are hobbies important for adults with busy jobs?"]},
+
+{id:"service",field:"Business",title:"Customer service & complaints",ar:"خدمة العملاء والشكاوى",
+v:[["complaint","شكوى",1,"I'd like to make a complaint."],["order","طلب / أوردر",1,"My order hasn't arrived."],["delivery","توصيل",1,"The delivery was late."],["apologise","يعتذر",2,"We apologise for the delay."],["inconvenience","إزعاج / مضايقة",3,"Sorry for the inconvenience."],["replace","يستبدل",2,"We'll replace it for free."],["tracking number","رقم التتبع",2,"Here's your tracking number."],["escalate","يصعّد الموضوع",3,"I'll escalate this to my manager."],["compensation","تعويض",3,"Will I get any compensation?"],["resolve","يحل",2,"We'll resolve it today."],["customer service","خدمة العملاء",1,"I called customer service."],["satisfied","راضي",2,"Are you satisfied with the solution?"]],
+ph:[["I'm sorry to hear that.","آسف إني أسمع كده."],["Let me look into it.","خليني أشوف الموضوع."],["Could I have your order number?","ممكن رقم الطلب؟"],["This is the third time I've called.","دي تالت مرة أتصل."],["I'd like to speak to a manager.","عايز أكلم المدير."],["Is there anything else I can help with?","فيه أي حاجة تانية أقدر أساعد فيها؟"]],
+dlg:{title:"Complaining about a late order",you:"a customer",them:"a customer service agent",lines:[["t","Thank you for calling. How can I help you today?"],["y","Hi. I ordered a laptop two weeks ago and it still hasn't arrived."],["t","I'm sorry to hear that. Could I have your order number?"],["y","Yes, it's 4 5 8 2 1."],["t","Thank you. I can see it was delayed at the warehouse."],["y","This is the third time I've called. When will it arrive?"],["t","I'll escalate it now. It will arrive within two days."],["y","OK. Will I get any compensation for the delay?"]]},
+pron:["I'm sorry to hear about the delay.","Could I have your order number, please?","We apologise for the inconvenience.","I'll escalate this to my manager today."],
+ch:["Call a company and complain about a wrong order.","You work in customer service. A customer is angry. Calm them down and offer a solution."]}
+];
+
+/* Offline placement: conversation-response questions, 3 per level, easy to hard */
+const PLACEMENT=[
+{l:"A1",q:"Someone says: \"Nice to meet you.\" You reply:",o:["Nice to meet you too.","I'm fine meet.","Yes, I meet.","Goodbye to meet."],a:0},
+{l:"A1",q:"\"Where are you from?\"",o:["I'm twenty.","I'm from Egypt.","I'm a teacher.","I'm fine, thanks."],a:1},
+{l:"A1",listen:"What time is it?",q:"Listen. What did they ask?",o:["The day","The time","The weather","Your name"],a:1},
+{l:"A2",q:"\"What did you do last weekend?\"",o:["I go to the beach.","I'm going to the beach.","I went to the beach.","I have go to the beach."],a:2},
+{l:"A2",q:"A waiter asks: \"Are you ready to order?\" You need more time:",o:["Not yet, could we have a few more minutes?","No, I don't order.","Yes, ready no.","I am not order."],a:0},
+{l:"A2",listen:"Could you speak a little slower, please?",q:"Listen. What does the person want?",o:["You to speak louder","You to speak more slowly","You to stop talking","You to repeat your name"],a:1},
+{l:"B1",q:"\"How long have you worked there?\"",o:["Since three years.","For three years.","Three years ago.","During three years."],a:1},
+{l:"B1",q:"A friend says: \"I failed my driving test again.\" The best reply:",o:["Congratulations!","Oh no, that's a shame. You'll pass next time.","Good for you.","It doesn't matter for me."],a:1},
+{l:"B1",listen:"If it rains tomorrow, we'll cancel the trip.",q:"Listen. When will they cancel?",o:["Only if it rains","Tomorrow for sure","Because it rained","Never"],a:0},
+{l:"B2",q:"Your colleague says: \"I think we should delay the launch.\" You disagree politely:",o:["You're wrong.","I see your point, but I think the timing is right.","No way.","That's stupid."],a:1},
+{l:"B2",q:"\"If I ___ about the traffic, I would have left earlier.\"",o:["knew","had known","have known","would know"],a:1},
+{l:"B2",listen:"I'd rather we didn't discuss the budget in front of the client.",q:"Listen. What does the speaker want?",o:["To talk about the budget with the client","Not to talk about the budget in front of the client","To increase the budget","To cancel the meeting"],a:1},
+{l:"C1",q:"In a meeting, someone says: \"Let's not get ahead of ourselves.\" They mean:",o:["Let's hurry up.","Let's not plan too far before the basics are done.","Let's stop the meeting.","Let's go first."],a:1},
+{l:"C1",q:"Choose the most natural sentence:",o:["Hardly I had arrived when the phone rang.","Hardly had I arrived when the phone rang.","Hardly I arrived when the phone was ringing.","I had hardly arrive when the phone rang."],a:1},
+{l:"C1",listen:"Their proposal is ambitious, though somewhat unrealistic given the timeline.",q:"Listen. What is the speaker's opinion?",o:["The plan is perfect.","The plan is too small.","The plan is bold but probably can't be done in time.","The plan is cheap."],a:2},
+{l:"C2",q:"\"The CEO's remarks were rather ___; nobody knew what she actually meant.\"",o:["explicit","equivocal","eloquent","exhaustive"],a:1},
+{l:"C2",q:"A client says: \"We'll take it under advisement.\" This most likely means:",o:["They agree completely.","They will think about it, with no promise.","They reject it rudely.","They want a discount."],a:1},
+{l:"C2",listen:"Notwithstanding the setbacks, the rollout went remarkably smoothly.",q:"Listen. What happened?",o:["The rollout failed.","There were problems, but the rollout still went well.","There were no problems at all.","The rollout was postponed."],a:1}
+];
+
+TOPICS.push(
+{id:"presentations",field:"Work",title:"Giving presentations",ar:"العروض التقديمية",
+v:[["slide","شريحة",1,"Let's move to the next slide."],["audience","الجمهور",1,"Know your audience before you start."],["introduce","يقدّم",1,"Let me introduce today's topic."],["main point","النقطة الأساسية",1,"My main point is simple."],["outline","ملخص الخطة",2,"Here's a quick outline of my talk."],["highlight","يبرز",2,"I'd like to highlight three results."],["chart","رسم بياني",2,"As you can see on this chart..."],["summarise","يلخّص",2,"To summarise, sales grew by ten percent."],["key takeaway","أهم حاجة تطلع بيها",3,"The key takeaway is that speed matters."],["engage","يشد انتباه",3,"Stories help you engage the audience."],["elaborate","يوضّح بالتفصيل",3,"Could you elaborate on that point?"],["wrap up","يختم",3,"Let me wrap up with one last idea."]],
+ph:[["Good morning, everyone. Thanks for coming.","صباح الخير يا جماعة، شكرًا إنكم جيتوا."],["Today I'm going to talk about...","النهارده هتكلم عن..."],["Let's take a look at the numbers.","تعالوا نبص على الأرقام."],["This brings me to my next point.","وده يوصلني للنقطة اللي بعدها."],["I'll take questions at the end.","هجاوب على الأسئلة في الآخر."],["That's a great question.","ده سؤال حلو جدًا."]],
+dlg:{title:"Answering questions after a presentation",you:"the presenter",them:"someone in the audience",lines:[["t","Thanks for the presentation. Can I ask a question?"],["y","Of course, go ahead."],["t","You said costs went down. By how much exactly?"],["y","By about fifteen percent compared to last year."],["t","And what was the main reason?"],["y","Mostly automation. We spend less time on manual reports."],["t","Interesting. Will that continue next year?"],["y","I think so. We plan to automate two more processes."]]},
+pron:["Today I'm going to talk about our results.","As you can see on this chart, sales are up.","This brings me to my next point.","The key takeaway is that speed matters."],
+ch:["Present your job or company in one minute.","Present a problem at work and your proposed solution, with three clear points."]},
+
+{id:"raise",field:"Career",title:"Salary & asking for a raise",ar:"المرتب وطلب زيادة",
+v:[["salary","مرتب",1,"My salary is paid monthly."],["raise","زيادة",1,"I'd like to ask for a raise."],["bonus","حافز / بونص",1,"We got a bonus at the end of the year."],["benefits","مزايا",2,"The benefits include health insurance."],["promotion","ترقية",2,"She got a promotion last month."],["performance","أداء",2,"My performance has been strong this year."],["market rate","سعر السوق",3,"My salary is below the market rate."],["justify","يبرر",3,"Can you justify the increase?"],["commission","عمولة",2,"Salespeople earn commission on each deal."],["responsibilities","مسؤوليات",2,"My responsibilities have grown a lot."],["counteroffer","عرض مقابل",3,"They made me a counteroffer to stay."],["leverage","ورقة ضغط",3,"Another offer gives you leverage."]],
+ph:[["Do you have a few minutes to talk?","عندك دقايق نتكلم؟"],["I'd like to discuss my salary.","حابب نتكلم عن مرتبي."],["Over the past year, I've...","خلال السنة اللي فاتت، أنا..."],["I believe my work justifies an increase.","شايف إن شغلي يستاهل زيادة."],["What would I need to do to get there?","محتاج أعمل إيه عشان أوصل لده؟"],["Could we review this again in three months?","ممكن نراجع ده تاني بعد ٣ شهور؟"]],
+dlg:{title:"Asking your manager for a raise",you:"an employee",them:"your manager",lines:[["t","Hi, you wanted to talk to me?"],["y","Yes, thanks. I'd like to discuss my salary."],["t","OK. What did you have in mind?"],["y","Over the past year, I've taken on three new accounts and exceeded my target."],["t","That's true, your performance has been great."],["y","Thank you. I believe a fifteen percent increase would be fair."],["t","Fifteen is difficult right now. Maybe ten?"],["y","Could we agree on ten now and review it again in six months?"]]},
+pron:["I'd like to discuss my salary with you.","My responsibilities have grown a lot this year.","I believe my work justifies an increase.","Could we review this again in six months?"],
+ch:["Explain why you deserve a raise in four sentences.","Your manager says there's no budget for raises. Respond and suggest alternatives."]},
+
+{id:"projects",field:"Work",title:"Project management",ar:"إدارة المشاريع",
+v:[["plan","خطة",1,"We need a clear plan."],["task","مهمة",1,"Each person has three tasks."],["team","فريق",1,"The team meets every Sunday."],["milestone","مرحلة مهمة",2,"We reached the first milestone."],["scope","نطاق الشغل",2,"The scope is too big for one month."],["resources","الموارد",2,"We don't have enough resources."],["risk","مخاطرة",2,"What's the biggest risk?"],["stakeholder","طرف معني / صاحب مصلحة",3,"Keep the stakeholders informed."],["bottleneck","عنق الزجاجة / سبب التعطيل",3,"Approval is the main bottleneck."],["dependency","اعتماد على حاجة تانية",3,"This task has a dependency on IT."],["delegate","يفوّض",2,"I'll delegate this to Karim."],["kick-off meeting","اجتماع البداية",3,"The kick-off meeting is on Monday."]],
+ph:[["Who's responsible for this?","مين المسؤول عن ده؟"],["What's the timeline?","الجدول الزمني إيه؟"],["We need to push the deadline.","محتاجين نأجل الديدلاين."],["Let's break it into smaller tasks.","يلا نقسمها لمهام أصغر."],["Is anything blocking you?","فيه حاجة موقفاك؟"],["I'll keep you posted.","هبلغك بالجديد أول بأول."]],
+dlg:{title:"Planning a new project",you:"a project manager",them:"a team member",lines:[["t","So, what's the plan for the new project?"],["y","First, we'll have a kick-off meeting with the client on Monday."],["t","What's the timeline?"],["y","Three months, with the first milestone at the end of week four."],["t","That's tight. Do we have enough resources?"],["y","Not yet. I'm asking for one more developer."],["t","What's the biggest risk?"],["y","The client's approvals. They can be slow, so we'll plan for that."]]},
+pron:["Who's responsible for this task?","We reached the first milestone on time.","Approval is the main bottleneck right now.","Let's break it into smaller tasks."],
+ch:["Describe a project you worked on from start to finish.","A project is behind schedule. Explain what went wrong and how you'll get it back on track."]},
+
+{id:"marketing",field:"Business",title:"Marketing & social campaigns",ar:"التسويق والحملات",
+v:[["advert","إعلان",1,"I saw your advert on Facebook."],["brand","براند / علامة تجارية",1,"They have a strong brand."],["customer","عميل",1,"Who is your typical customer?"],["campaign","حملة",2,"The campaign starts next week."],["target audience","الجمهور المستهدف",2,"Our target audience is young parents."],["launch","يطلق",2,"We'll launch the product in March."],["reach","وصول / عدد اللي شافوا",2,"The post had a reach of fifty thousand."],["engagement","التفاعل",3,"Video gets more engagement than text."],["conversion rate","نسبة التحويل",3,"Our conversion rate is two percent."],["lead","عميل محتمل",2,"We got two hundred leads from the event."],["positioning","التموضع في السوق",3,"Our positioning is premium but simple."],["word of mouth","الكلام من شخص لشخص",3,"Most clients come by word of mouth."]],
+ph:[["Who are we trying to reach?","إحنا عايزين نوصل لمين؟"],["What's the budget for this campaign?","ميزانية الحملة كام؟"],["The numbers look promising.","الأرقام مبشرة."],["Let's test two versions.","يلا نجرب نسختين."],["It went viral.","انتشر جدًا."],["We need a clear call to action.","محتاجين دعوة واضحة للعميل يعمل حاجة."]],
+dlg:{title:"Reviewing a campaign",you:"a marketing specialist",them:"your manager",lines:[["t","How did last month's campaign go?"],["y","Quite well. We reached about eighty thousand people."],["t","And how many leads did we get?"],["y","Around three hundred, mostly from the video ads."],["t","What about the conversion rate?"],["y","It was two percent, which is better than last time."],["t","Good. What would you change next time?"],["y","I'd spend more on video and test a shorter message."]]},
+pron:["Our target audience is young professionals.","Video gets more engagement than text.","We'll launch the campaign next month.","Most of our clients come by word of mouth."],
+ch:["Describe an advert you remember and why it worked.","Plan a simple campaign for a small business: audience, message, channel and budget."]},
+
+{id:"conflict",field:"Work",title:"Teamwork & conflict",ar:"العمل الجماعي والخلافات",
+v:[["agree","يتفق",1,"I agree with you."],["disagree","يختلف",1,"I'm afraid I disagree."],["argue","يتخانق / يجادل",1,"They argued about the plan."],["misunderstanding","سوء فهم",2,"It was just a misunderstanding."],["compromise","حل وسط",2,"Let's find a compromise."],["blame","يلوم",2,"Don't blame the new guy."],["frustrated","متضايق / زهقان",2,"I'm frustrated with the delays."],["tension","توتر",3,"There's some tension in the team."],["resolve","يحل",2,"We resolved the issue quickly."],["constructive","بنّاء",3,"Let's keep this constructive."],["take sides","ينحاز لطرف",3,"I don't want to take sides."],["clear the air","يصفّي الجو",3,"We had coffee to clear the air."]],
+ph:[["I see where you're coming from.","فاهم وجهة نظرك."],["Can we talk about what happened?","ممكن نتكلم عن اللي حصل؟"],["I felt a bit left out.","حسيت إني متهمش شوية."],["Let's focus on the solution.","خلينا نركز على الحل."],["I didn't mean it that way.","مكنتش أقصد كده."],["How can we avoid this next time?","إزاي نتجنب ده المرة الجاية؟"]],
+dlg:{title:"Solving a problem with a colleague",you:"a team member",them:"a colleague",lines:[["t","You wanted to talk?"],["y","Yes. I felt a bit frustrated in yesterday's meeting."],["t","Oh, why? What happened?"],["y","You presented the report, but I did most of the work."],["t","I'm sorry, I didn't mean it that way. I should have mentioned you."],["y","Thanks. I just want us both to get credit."],["t","Fair enough. How can we avoid this next time?"],["y","Let's agree who presents what before each meeting."]]},
+pron:["I see where you're coming from.","It was just a misunderstanding.","Let's focus on the solution, not the problem.","We had a coffee to clear the air."],
+ch:["Describe a disagreement you had and how it ended.","Two team members don't get along. As their manager, what would you say to them?"]},
+
+{id:"leading",field:"Work",title:"Managing a team",ar:"إدارة فريق",
+v:[["manager","مدير",1,"My manager is very supportive."],["goal","هدف",1,"Our goal is twenty new clients."],["meeting","اجتماع",1,"We have a team meeting today."],["motivate","يحفّز",2,"How do you motivate your team?"],["one-on-one","اجتماع فردي",2,"I have a one-on-one with each person weekly."],["coach","يدرّب / يوجّه",2,"I coach new SDRs on cold calls."],["accountable","مسؤول ومحاسَب",3,"Everyone is accountable for their numbers."],["morale","الروح المعنوية",3,"Team morale is high this month."],["recognise","يقدّر",2,"I always recognise good work."],["micromanage","يتدخل في كل تفصيلة",3,"Nobody likes to be micromanaged."],["onboard","يأهّل موظف جديد",3,"We onboard new hires in two weeks."],["underperform","أداؤه أقل من المطلوب",3,"One rep is underperforming."]],
+ph:[["What do you need from me?","محتاج مني إيه؟"],["Great job on this.","شغل ممتاز في دي."],["Let's set clear goals for this month.","يلا نحط أهداف واضحة للشهر ده."],["How are you finding the new role?","إيه رأيك في الدور الجديد؟"],["I'd like to see more calls each day.","عايز أشوف مكالمات أكتر كل يوم."],["My door is always open.","بابي مفتوح دايمًا."]],
+dlg:{title:"A one-on-one with a team member",you:"a team leader",them:"a sales rep on your team",lines:[["t","Hi, you wanted to see me?"],["y","Yes, just our weekly one-on-one. How are things going?"],["t","OK, but I'm struggling to book meetings."],["y","I see. How many calls are you making each day?"],["t","About twenty."],["y","Let's aim for forty, and I'll listen to a few calls with you."],["t","That would really help. Thanks."],["y","No problem. Let's check the numbers again next week."]]},
+pron:["How are you finding the new role?","Team morale is really high this month.","Everyone is accountable for their own numbers.","Let's set clear goals for this quarter."],
+ch:["Describe the best manager you have ever had.","One person on your team keeps missing targets. How do you handle it?"]},
+
+{id:"remote",field:"Work",title:"Video calls & remote work",ar:"الاجتماعات أونلاين والشغل من البيت",
+v:[["mute","يكتم الصوت",1,"You're on mute."],["camera","كاميرا",1,"Can you turn on your camera?"],["link","لينك",1,"I'll send you the meeting link."],["connection","الاتصال بالنت",1,"My connection is bad today."],["lag","تأخير / تقطيع",2,"There's a lag on the video."],["work from home","يشتغل من البيت",2,"I work from home on Thursdays."],["time zone","فرق التوقيت",2,"We're in different time zones."],["share screen","يشير الشاشة",2,"Let me share my screen."],["flexible","مرن",2,"My hours are flexible."],["asynchronous","غير متزامن",3,"We use asynchronous updates on Slack."],["burnout","إرهاق شديد",3,"Remote work can lead to burnout."],["work-life balance","التوازن بين الشغل والحياة",3,"I have a better work-life balance now."]],
+ph:[["Can everyone hear me?","الكل سامعني؟"],["Sorry, you froze for a second.","آسف، الصورة وقفت ثانية."],["I think you're on mute.","أعتقد إنك عامل ميوت."],["Let's give it a minute for others to join.","نستنى دقيقة لحد الباقيين يدخلوا."],["Could you send the slides after the call?","ممكن تبعت السلايدز بعد الكول؟"],["I have a hard stop at three.","لازم أقفل الساعة ٣ بالظبط."]],
+dlg:{title:"Starting an online meeting",you:"the meeting host",them:"a client",lines:[["t","Hello? Can you hear me?"],["y","Yes, I can hear you now. Can you hear me?"],["t","Yes, perfectly. Sorry I'm late, my connection was bad."],["y","No problem. Shall we give it a minute for the others?"],["t","Sure. Is everyone from your side joining?"],["y","Yes, my colleague Mohsen is joining in a minute."],["t","Great. How long do we have?"],["y","About forty-five minutes. Let me share my screen first."]]},
+pron:["Sorry, I think you're on mute.","Can everyone see my screen now?","We're in different time zones.","I have a better work-life balance now."],
+ch:["Do you prefer working from home or the office? Why?","Give advice to a company that wants to move to remote work."]},
+
+{id:"contracts",field:"Business",title:"Contracts & agreements",ar:"العقود والاتفاقات",
+v:[["sign","يمضي",1,"Please sign here."],["contract","عقد",1,"The contract is for one year."],["agree","يوافق",1,"Both sides agreed."],["terms","الشروط",2,"Please read the terms carefully."],["renew","يجدد",2,"We renew the contract every year."],["clause","بند",2,"Clause five covers payment."],["deadline","موعد نهائي",1,"The payment deadline is the tenth."],["penalty","غرامة",2,"There's a penalty for late delivery."],["legal team","الفريق القانوني",2,"Our legal team will review it."],["liability","مسؤولية قانونية",3,"Who has liability if data is lost?"],["terminate","ينهي",3,"Either side can terminate with notice."],["binding","ملزم",3,"This is a legally binding agreement."]],
+ph:[["Could we go through the main terms?","ممكن نراجع الشروط الأساسية؟"],["We'd like to change clause four.","حابين نغير البند الرابع."],["Our legal team needs to review it.","الفريق القانوني لازم يراجعه."],["When can you send the final version?","إمتى تقدر تبعت النسخة النهائية؟"],["Is this price fixed for the whole year?","السعر ده ثابت طول السنة؟"],["We're ready to sign.","إحنا جاهزين نمضي."]],
+dlg:{title:"Discussing a contract",you:"a supplier",them:"a client's procurement manager",lines:[["t","We've read the contract. We have a few comments."],["y","Of course. Which parts?"],["t","First, the payment terms. Thirty days is too short for us."],["y","I understand. Would sixty days work for you?"],["t","Yes, that's better. And the penalty clause?"],["y","We can reduce the penalty if delivery is late by less than a week."],["t","OK. Our legal team will review the new version."],["y","Great. I'll send it to you by tomorrow."]]},
+pron:["Please read the terms carefully.","Clause five covers the payment terms.","This is a legally binding agreement.","Our legal team will review it this week."],
+ch:["Explain the main points of a contract you signed (phone, rent, job).","A client wants to change the payment terms. Negotiate a fair solution."]},
+
+{id:"startup",field:"Business",title:"Starting a business",ar:"بدء مشروع",
+v:[["business","مشروع / بيزنس",1,"I want to start my own business."],["idea","فكرة",1,"It's a simple idea."],["profit","ربح",1,"We made a profit in year two."],["loss","خسارة",1,"The first year was a loss."],["investor","مستثمر",2,"We're looking for investors."],["competitor","منافس",2,"Who are your main competitors?"],["funding","تمويل",2,"They raised funding last year."],["break even","يغطي تكاليفه",3,"We expect to break even next year."],["scale","يكبّر / يتوسع",3,"How will you scale the business?"],["cash flow","التدفق النقدي",3,"Cash flow is the biggest challenge."],["pitch","عرض فكرة مختصر",2,"I gave a five-minute pitch."],["market gap","فجوة في السوق",3,"We saw a gap in the market."]],
+ph:[["What problem does it solve?","بتحل مشكلة إيه؟"],["Who are your customers?","مين العملاء بتوعك؟"],["How do you make money?","بتكسب فلوس إزاي؟"],["We started small.","بدأنا صغيرين."],["It's been a steep learning curve.","اتعلمنا كتير وبسرعة."],["We're growing month by month.","بنكبر شهر ورا شهر."]],
+dlg:{title:"Pitching to an investor",you:"a founder",them:"an investor",lines:[["t","So, tell me about your business."],["y","We help small online shops manage orders and stock in one app."],["t","What problem does it solve?"],["y","Most small sellers use paper or Excel, so they lose orders and money."],["t","How do you make money?"],["y","Shops pay a monthly subscription, starting at two hundred pounds."],["t","How many customers do you have?"],["y","Three hundred, and we're growing ten percent every month."]]},
+pron:["We help small shops manage their orders.","Who are your main competitors?","We expect to break even next year.","Cash flow is our biggest challenge."],
+ch:["Describe a business you would like to start.","Pitch a business idea to an investor in one minute: problem, solution, customers, money."]},
+
+{id:"ai",field:"Technology",title:"Data & AI",ar:"البيانات والذكاء الاصطناعي",
+v:[["data","بيانات",1,"We collect data from every branch."],["report","تقرير",1,"The report is ready."],["tool","أداة",1,"It's a useful tool."],["automate","يعمل أوتوماتيك",2,"We automated the monthly report."],["dashboard","داشبورد / لوحة متابعة",2,"Check the sales dashboard."],["accurate","دقيق",2,"Is this data accurate?"],["insight","استنتاج مفيد",2,"The data gave us a new insight."],["artificial intelligence (AI)","الذكاء الاصطناعي",2,"AI can write the first draft."],["governance","حوكمة",3,"Data governance is a priority for banks."],["compliance","الالتزام باللوائح",3,"We must stay in compliance with the law."],["silo","بيانات معزولة",3,"Each department has its own data silo."],["scalable","قابل للتوسع",3,"The platform is fully scalable."]],
+ph:[["Where does this data come from?","البيانات دي جاية منين؟"],["Can we trust these numbers?","نقدر نثق في الأرقام دي؟"],["It saves us hours every week.","بيوفر علينا ساعات كل أسبوع."],["Who has access to the data?","مين عنده صلاحية على البيانات؟"],["AI won't replace people, but it will change jobs.","الذكاء الاصطناعي مش هيلغي الناس بس هيغير الوظايف."],["Let's start with a small pilot.","يلا نبدأ بتجربة صغيرة."]],
+dlg:{title:"Explaining a data platform to a client",you:"a sales consultant",them:"a bank's IT director",lines:[["t","What exactly does your platform do?"],["y","It connects data from all your systems and turns it into ready-to-use data products."],["t","We already have a data warehouse. Why do we need this?"],["y","Your warehouse stores data. We add governance, security and sharing on top of it."],["t","How long does it take to set up?"],["y","A pilot usually takes six to eight weeks."],["t","And what about compliance with central bank rules?"],["y","Access is controlled and logged, so compliance reports are much easier."]]},
+pron:["Where does this data actually come from?","We automated the monthly report.","Data governance is a priority for banks.","Let's start with a small pilot project."],
+ch:["Explain how you use AI or data in your daily work.","Will AI help or hurt jobs in your country? Give your opinion with examples."]},
+
+{id:"networking",field:"Career",title:"Conferences & networking",ar:"المؤتمرات والتعارف المهني",
+v:[["event","إيفنت / فعالية",1,"Are you going to the event?"],["speaker","متحدث",1,"The first speaker was excellent."],["business card","كارت شخصي",1,"Here's my business card."],["booth","جناح / بوث",2,"Visit us at booth twelve."],["connect","يتواصل",2,"Let's connect on LinkedIn."],["introduce","يعرّف",2,"Let me introduce you to my colleague."],["panel","حلقة نقاش",2,"I'm on a panel this afternoon."],["follow-up","متابعة",2,"I'll send a follow-up email."],["keynote","الكلمة الرئيسية",3,"The keynote was about AI."],["mingle","يندمج ويتعرف على الناس",3,"Let's mingle a bit before lunch."],["referral","ترشيح / توصية",3,"Most of my deals come from referrals."],["elevator pitch","تعريف سريع في ثواني",3,"Prepare a thirty-second elevator pitch."]],
+ph:[["Is this your first time here?","دي أول مرة تيجي هنا؟"],["What did you think of the keynote?","إيه رأيك في الكلمة الرئيسية؟"],["What brings you to the conference?","إيه اللي جابك المؤتمر؟"],["We should definitely stay in touch.","لازم نفضل على تواصل."],["Here's my card.","اتفضل الكارت بتاعي."],["It was great meeting you.","اتشرفت بمعرفتك."]],
+dlg:{title:"Networking at a conference",you:"a visitor",them:"someone at a coffee break",lines:[["t","Hi, is this seat taken?"],["y","No, please sit down. Are you enjoying the conference?"],["t","Very much. What did you think of the keynote?"],["y","It was great, especially the part about AI in banking."],["t","I agree. What do you do?"],["y","I work in sales for a data platform company. And you?"],["t","I'm the CTO of a small insurance company."],["y","Interesting! Let's connect on LinkedIn. Here's my card."]]},
+pron:["Is this your first time at the conference?","Let's connect on LinkedIn.","The keynote was about AI in banking.","Here's my business card."],
+ch:["Give your thirty-second elevator pitch.","Describe how you would make five useful contacts at a big conference."]}
+);
+
+TOPICS.push(
+{id:"feedback",field:"Work",title:"Giving & receiving feedback",ar:"الملاحظات والتقييم",
+v:[["feedback","ملاحظات / تقييم",1,"Can I give you some feedback?"],["good job","شغل كويس",1,"Good job on the report."],["improve","يحسّن",1,"How can I improve?"],["suggestion","اقتراح",2,"I have a small suggestion."],["strength","نقطة قوة",2,"Your strength is clear writing."],["area to improve","نقطة محتاجة تتحسن",2,"One area to improve is timing."],["performance review","تقييم الأداء",2,"My performance review is next week."],["criticism","نقد",2,"He doesn't take criticism well."],["constructive","بنّاء",3,"Thanks for the constructive feedback."],["specific","محدد",2,"Can you be more specific?"],["defensive","بيدافع عن نفسه بزيادة",3,"Try not to get defensive."],["actionable","ينفع يتنفذ",3,"Give feedback that's actionable."]],
+ph:[["Do you have a minute for some feedback?","عندك دقيقة لشوية ملاحظات؟"],["What went well was...","اللي كان كويس هو..."],["Next time, you could try...","المرة الجاية ممكن تجرب..."],["Thanks, that's really helpful.","شكرًا، ده مفيد جدًا."],["Could you give me an example?","ممكن تديني مثال؟"],["I'll work on that.","هشتغل على النقطة دي."]],
+dlg:{title:"Getting feedback on a report",you:"an employee",them:"your manager",lines:[["t","Do you have a minute for some feedback on your report?"],["y","Sure. How was it?"],["t","Overall it was very good. The analysis was clear."],["y","Thank you. Is there anything I should improve?"],["t","It was a bit long. The summary should be on the first page."],["y","That makes sense. Could you give me an example of a good summary?"],["t","Yes, I'll send you one from last quarter."],["y","Thanks, that's really helpful. I'll work on that."]]},
+pron:["Do you have a minute for some feedback?","Could you be a bit more specific?","Thanks for the constructive feedback.","Next time, you could try a shorter summary."],
+ch:["Describe the best feedback you ever received.","Give feedback to a colleague who talks too much in meetings, kindly but clearly."]},
+
+{id:"logistics",field:"Business",title:"Orders, supply & delivery",ar:"الطلبات والتوريد والشحن",
+v:[["order","طلب",1,"We placed the order yesterday."],["deliver","يوصّل",1,"When can you deliver?"],["supplier","مورّد",1,"We changed our supplier."],["stock","مخزون",1,"Is it in stock?"],["warehouse","مخزن",2,"The goods are in the warehouse."],["shipment","شحنة",2,"The shipment arrives on Monday."],["invoice","فاتورة",2,"Please send the invoice."],["quantity","كمية",1,"What quantity do you need?"],["lead time","مدة التوريد",3,"The lead time is three weeks."],["backorder","طلب متأخر لعدم توفر المخزون",3,"That item is on backorder."],["customs clearance","التخليص الجمركي",3,"Customs clearance took five days."],["bulk discount","خصم الكميات",3,"Do you offer a bulk discount?"]],
+ph:[["I'd like to place an order.","حابب أعمل طلب."],["When will it be delivered?","هيوصل إمتى؟"],["Can you track the shipment?","ممكن تتابع الشحنة؟"],["We're running low on stock.","المخزون قرب يخلص."],["The delivery was incomplete.","التوريد كان ناقص."],["Please confirm the delivery date.","من فضلك أكد ميعاد التوريد."]],
+dlg:{title:"Calling a supplier",you:"a buyer",them:"a supplier",lines:[["t","Good morning, Nile Supplies. How can I help?"],["y","Hi, I'd like to order five hundred boxes of A4 paper."],["t","Sure. We have them in stock. When do you need them?"],["y","By next Thursday, if possible."],["t","That's fine. Delivery takes three days."],["y","Great. Do you offer a bulk discount for that quantity?"],["t","Yes, five percent for orders over three hundred boxes."],["y","Perfect. Please send me the invoice and confirm the delivery date."]]},
+pron:["I'd like to place an order, please.","The shipment arrives on Monday morning.","The lead time is about three weeks.","Do you offer a bulk discount?"],
+ch:["Explain how products get from a factory to a shop.","Your shipment is two weeks late and your customers are angry. Call the supplier."]},
+
+{id:"reports",field:"Business",title:"Numbers, budgets & reports",ar:"الأرقام والميزانيات والتقارير",
+v:[["increase","زيادة",1,"Sales increased by ten percent."],["decrease","نقص",1,"Costs decreased last month."],["total","إجمالي",1,"The total is two million."],["percent","في المية",1,"Twenty percent of clients renewed."],["budget","ميزانية",1,"We're within budget."],["revenue","إيرادات",2,"Revenue grew in Q3."],["cost","تكلفة",1,"The cost is too high."],["forecast","توقعات",2,"The forecast for next year is positive."],["quarter","ربع سنة",2,"It was our best quarter."],["year on year","مقارنة بنفس الفترة السنة اللي فاتت",3,"Profit is up fifteen percent year on year."],["roughly","تقريبًا",2,"It costs roughly five thousand."],["significantly","بشكل كبير",3,"Costs dropped significantly."]],
+ph:[["As you can see from the figures...","زي ما انتوا شايفين من الأرقام..."],["Sales went up by twelve percent.","المبيعات زادت ١٢٪."],["Costs fell slightly.","التكاليف قلت شوية."],["We're slightly over budget.","إحنا فوق الميزانية شوية."],["The numbers speak for themselves.","الأرقام بتتكلم عن نفسها."],["Compared to last year...","مقارنة بالسنة اللي فاتت..."]],
+dlg:{title:"Presenting quarterly results",you:"a sales manager",them:"the finance director",lines:[["t","So, how did the quarter go?"],["y","Very well. Revenue went up by twelve percent."],["t","Compared to the same quarter last year?"],["y","Yes, year on year. And we won four new clients."],["t","What about costs?"],["y","Costs increased slightly, mainly because of travel."],["t","Are we still within budget?"],["y","Yes, roughly two percent under budget."]]},
+pron:["Revenue went up by twelve percent.","We're slightly over budget this quarter.","Profit is up fifteen percent year on year.","The forecast for next year looks positive."],
+ch:["Describe a number that is important in your job and how it changed.","Present last quarter's results for an imaginary company: revenue, costs, and next steps."]},
+
+{id:"family",field:"Family",title:"Family & relationships",ar:"العيلة والعلاقات",
+v:[["parents","الأهل (الأب والأم)",1,"My parents live in Alexandria."],["brother","أخ",1,"I have two brothers."],["married","متجوز",1,"I've been married for ten years."],["cousin","ابن عم / خال...",1,"My cousin works in Dubai."],["relatives","قرايب",2,"We visit our relatives at Eid."],["in-laws","أهل الزوج أو الزوجة",2,"We have lunch with my in-laws on Fridays."],["close to","قريب من (عاطفيًا)",2,"I'm very close to my sister."],["raise","يربّي",2,"They raised five children."],["take after","يطلع لـ",3,"My son takes after his grandfather."],["extended family","العيلة الكبيرة",3,"We have a big extended family."],["get on well","علاقتهم حلوة",2,"I get on well with my brother."],["only child","ابن وحيد",2,"I'm an only child."]],
+ph:[["Do you have any brothers or sisters?","عندك إخوات؟"],["How many children do you have?","عندك كام طفل؟"],["We're a very close family.","إحنا عيلة قريبة من بعض جدًا."],["He looks just like his dad.","شبه أبوه بالظبط."],["We get together every Friday.","بنتجمع كل جمعة."],["Family comes first.","العيلة أولًا."]],
+dlg:{title:"Talking about family",you:"yourself",them:"a new colleague",lines:[["t","Do you have any brothers or sisters?"],["y","Yes, I have one brother and two sisters."],["t","Are you the oldest?"],["y","No, I'm the youngest. My brother is five years older."],["t","Are you close?"],["y","Very close. We get together every Friday at my parents' house."],["t","That's lovely. Do you have children?"],["y","Yes, one son. He looks just like his grandfather."]]},
+pron:["I have one brother and two sisters.","We get together every Friday.","My son takes after his grandfather.","We visit our relatives at Eid."],
+ch:["Describe your family.","How are families in Egypt changing compared with your parents' generation?"]},
+
+{id:"cooking",field:"Everyday life",title:"Cooking & food",ar:"الطبخ والأكل",
+v:[["boil","يسلق / يغلي",1,"Boil the rice for ten minutes."],["fry","يقلي",1,"Fry the onions until golden."],["recipe","وصفة",1,"Can you send me the recipe?"],["ingredients","مكونات",2,"What are the ingredients?"],["chop","يقطّع",2,"Chop the tomatoes finely."],["oven","فرن",1,"Put it in the oven for an hour."],["stir","يقلّب",2,"Stir the sauce slowly."],["taste","يدوق / طعم",1,"It tastes amazing."],["season","يتبّل",3,"Season with salt and cumin."],["simmer","يسيبه على نار هادية",3,"Let it simmer for twenty minutes."],["leftovers","بواقي الأكل",2,"We had leftovers for lunch."],["homemade","معمول في البيت",2,"Everything here is homemade."]],
+ph:[["What's your favourite dish?","إيه أكلتك المفضلة؟"],["It smells delicious.","ريحته تجنن."],["Could you pass the salt?","ممكن الملح؟"],["I'm not a great cook.","أنا مش طباخ شاطر."],["It's my mum's recipe.","دي وصفة ماما."],["Help yourself.","اتفضل خد براحتك."]],
+dlg:{title:"Explaining a recipe",you:"someone who cooks",them:"a foreign friend",lines:[["t","This koshari is amazing! How do you make it?"],["y","It's my mum's recipe. You need rice, lentils, pasta and chickpeas."],["t","Wow, that's a lot. What about the sauce?"],["y","It's a tomato sauce with garlic and vinegar."],["t","Is it difficult to make?"],["y","Not really, but it takes time. You cook each part separately."],["t","What makes the onions so crispy?"],["y","You fry them slowly in hot oil until they're dark brown."]]},
+pron:["Chop the tomatoes and fry the onions.","Let it simmer for twenty minutes.","It smells absolutely delicious.","Season it with salt and a little cumin."],
+ch:["Explain how to make a simple dish you know.","Is home cooking better than eating out? Compare cost, health and time."]},
+
+{id:"grocery",field:"Everyday life",title:"Supermarket & groceries",ar:"السوبر ماركت",
+v:[["aisle","ممر بين الرفوف",2,"The rice is in aisle four."],["basket","سلة",1,"Grab a basket, please."],["checkout","الكاشير",1,"The checkout is very busy."],["bag","كيس",1,"Do you need a bag?"],["fresh","طازة",1,"Is the bread fresh?"],["kilo","كيلو",1,"A kilo of tomatoes, please."],["expiry date","تاريخ الانتهاء",2,"Check the expiry date."],["offer","عرض",1,"There's an offer on cheese."],["loyalty card","كارت نقاط",2,"Do you have a loyalty card?"],["out of","خلص منه",2,"We're out of milk."],["organic","أورجانيك",3,"Organic food is more expensive."],["in season","في موسمه",3,"Mangoes are in season now."]],
+ph:[["Where can I find the eggs?","ألاقي البيض فين؟"],["Do you have any more of these?","فيه تاني من دول؟"],["Can I pay by card?","ينفع أدفع بالكارت؟"],["I think this is the wrong price.","أعتقد السعر ده غلط."],["Could I have a receipt?","ممكن الإيصال؟"],["We need to buy milk.","محتاجين نشتري لبن."]],
+dlg:{title:"Shopping at the supermarket",you:"a shopper",them:"a supermarket employee",lines:[["t","Can I help you find something?"],["y","Yes, where can I find the olive oil?"],["t","It's in aisle six, next to the rice."],["y","Thanks. Is there an offer on it this week?"],["t","Yes, buy two and get one free."],["y","Great. And do you have fresh bread today?"],["t","It's just come out of the oven."],["y","Perfect. I'll take two loaves."]]},
+pron:["Where can I find the olive oil?","Please check the expiry date.","Mangoes are in season right now.","There's an offer on cheese this week."],
+ch:["Describe your weekly shopping.","Is it better to shop at a big supermarket or a local shop? Explain."]},
+
+{id:"transport",field:"Everyday life",title:"Taxis, metro & getting around",ar:"المواصلات",
+v:[["bus","أتوبيس",1,"I take the bus to work."],["ticket","تذكرة",1,"How much is a ticket?"],["station","محطة",1,"Which station do I get off at?"],["traffic","زحمة",1,"The traffic is terrible today."],["fare","أجرة",2,"What's the fare to the airport?"],["get off","ينزل",2,"Get off at the next stop."],["change","يغيّر خط",2,"Change at Sadat station."],["rush hour","ساعة الذروة",2,"Avoid driving in rush hour."],["ride-hailing app","أبلكيشن توصيل زي أوبر",3,"I usually use a ride-hailing app."],["detour","طريق بديل",3,"The driver took a detour."],["traffic jam","زحمة واقفة",2,"We were stuck in a traffic jam."],["pick up","ياخد حد من مكان",2,"Can you pick me up at nine?"]],
+ph:[["How do I get to...?","أروح... إزاي؟"],["Could you drop me here, please?","ممكن تنزلني هنا؟"],["How long does it take?","بياخد قد إيه؟"],["Is this the right line for...?","ده الخط الصح لـ...؟"],["Keep the change.","خلي الباقي."],["I'm running late because of the traffic.","متأخر بسبب الزحمة."]],
+dlg:{title:"Taking a taxi",you:"a passenger",them:"a taxi driver",lines:[["t","Where to?"],["y","To the airport, Terminal 3, please."],["t","OK. Which way do you prefer, the ring road or downtown?"],["y","Whichever is faster. I have a flight at six."],["t","The ring road, then. There's less traffic."],["y","Great. How long will it take?"],["t","About forty minutes."],["y","Perfect. Could you drop me at departures, please?"]]},
+pron:["How do I get to Sadat station?","The traffic is terrible in rush hour.","Could you drop me here, please?","I usually use a ride-hailing app."],
+ch:["Describe how you get to work.","How could your city improve its public transport?"]},
+
+{id:"directions",field:"Travel",title:"Asking for directions",ar:"السؤال عن الطريق",
+v:[["left","شمال",1,"Turn left at the bank."],["right","يمين",1,"It's on your right."],["straight on","على طول",1,"Go straight on for two minutes."],["corner","ناصية",1,"It's on the corner."],["opposite","قصاد",2,"It's opposite the pharmacy."],["next to","جنب",1,"The café is next to the hotel."],["block","بلوك / مربع سكني",2,"Walk two blocks."],["traffic lights","إشارة المرور",2,"Turn right at the traffic lights."],["landmark","معلم مشهور",3,"Is there a landmark near it?"],["roundabout","دوران / ميدان",2,"Take the second exit at the roundabout."],["within walking distance","قريب ينفع يتمشى",3,"It's within walking distance."],["get lost","يتوه",2,"I got lost on the way."]],
+ph:[["Excuse me, how do I get to...?","لو سمحت، أروح... إزاي؟"],["Is it far from here?","بعيد من هنا؟"],["Can you show me on the map?","ممكن توريني على الخريطة؟"],["You can't miss it.","مستحيل يفوتك."],["Sorry, I'm not from around here.","آسف، أنا مش من هنا."],["It's about a ten-minute walk.","حوالي عشر دقايق مشي."]],
+dlg:{title:"Asking for directions in a city",you:"a tourist",them:"a local",lines:[["t","Are you OK? You look lost."],["y","Yes, I'm looking for the National Museum. Is it far?"],["t","Not really. It's about a ten-minute walk."],["y","Great. How do I get there?"],["t","Go straight on, then turn left at the traffic lights."],["y","Left at the lights. And then?"],["t","Walk two blocks. It's opposite a big park. You can't miss it."],["y","Thanks a lot for your help."]]},
+pron:["Excuse me, how do I get to the museum?","Turn left at the traffic lights.","It's opposite the pharmacy, on the corner.","It's within walking distance."],
+ch:["Give directions from your home to a nearby café.","Describe your neighbourhood to a visitor and recommend three places."]},
+
+{id:"weather",field:"Everyday life",title:"Weather & seasons",ar:"الجو والفصول",
+v:[["hot","حر",1,"It's very hot today."],["cold","برد",1,"It's cold in the morning."],["sunny","مشمس",1,"It's sunny all week."],["windy","فيه هوا",1,"It's too windy for the beach."],["humid","رطب",2,"Alexandria is humid in summer."],["forecast","النشرة الجوية",2,"What's the forecast for tomorrow?"],["degrees","درجة",1,"It's forty degrees!"],["sandstorm","عاصفة ترابية",2,"There was a sandstorm yesterday."],["mild","معتدل",2,"Winters here are mild."],["heatwave","موجة حر",3,"We're in the middle of a heatwave."],["chilly","بارد شوية",3,"It's a bit chilly tonight."],["pouring","بتشتي جامد",3,"It's pouring with rain."]],
+ph:[["What's the weather like today?","الجو عامل إيه النهارده؟"],["It's boiling!","الدنيا نار!"],["It looks like rain.","شكلها هتمطر."],["Take a jacket, just in case.","خد جاكيت احتياطي."],["I love this time of year.","بحب الوقت ده من السنة."],["It's perfect weather for a walk.","جو مثالي للتمشية."]],
+dlg:{title:"Chatting about the weather",you:"yourself",them:"a colleague from abroad",lines:[["t","It's so hot today! Is it always like this?"],["y","In summer, yes. It can reach forty degrees in Cairo."],["t","Wow. When's the best time to visit Egypt?"],["y","I'd say from November to March. It's sunny but mild."],["t","Does it ever rain?"],["y","Not much in Cairo, but it rains in Alexandria in winter."],["t","And what about sandstorms?"],["y","They happen in spring sometimes, but they don't last long."]]},
+pron:["What's the weather like in winter?","It's boiling hot in the summer.","We're in the middle of a heatwave.","Take a jacket, just in case."],
+ch:["Describe the weather in your city in each season.","How is climate change affecting the weather where you live?"]},
+
+{id:"emergency",field:"Health",title:"Emergencies & accidents",ar:"الطوارئ والحوادث",
+v:[["help","نجدة / مساعدة",1,"Help! Call an ambulance!"],["ambulance","إسعاف",1,"The ambulance arrived quickly."],["hurt","متعور / بيوجع",1,"Are you hurt?"],["fire","حريقة",1,"There's a fire in the building."],["accident","حادثة",1,"I saw an accident on the road."],["injured","مصاب",2,"Two people were injured."],["emergency","طوارئ",2,"Call 123 in an emergency."],["bleeding","بينزف",2,"He's bleeding from his arm."],["unconscious","فاقد الوعي",3,"She's unconscious but breathing."],["first aid","إسعافات أولية",2,"Do you know first aid?"],["stolen","اتسرق",2,"My phone was stolen."],["evacuate","يخلي المكان",3,"We had to evacuate the building."]],
+ph:[["Call an ambulance!","اطلب الإسعاف!"],["Is anyone hurt?","فيه حد اتعور؟"],["Stay calm.","اهدى."],["Don't move him.","متحركهوش."],["I need to report a theft.","عايز أبلغ عن سرقة."],["Where's the nearest hospital?","فين أقرب مستشفى؟"]],
+dlg:{title:"Calling for help after an accident",you:"a witness",them:"an emergency operator",lines:[["t","Emergency services. What's your emergency?"],["y","There's been a car accident on the Ring Road, near the Maadi exit."],["t","Is anyone injured?"],["y","Yes, one man is bleeding from his head."],["t","Is he conscious?"],["y","Yes, he's awake and talking."],["t","OK. Don't move him. An ambulance is on its way."],["y","Thank you. Should I stay with him?"]]},
+pron:["Call an ambulance, quickly!","Is anyone hurt or bleeding?","Don't move him until help arrives.","We had to evacuate the building."],
+ch:["Describe an emergency you saw or heard about.","What should everyone know about first aid? Explain three important things."]},
+
+{id:"pharmacy",field:"Health",title:"At the pharmacy",ar:"في الصيدلية",
+v:[["medicine","دوا",1,"I need some medicine for a cold."],["tablet","قرص",1,"Take one tablet twice a day."],["cough","كحة",1,"I have a bad cough."],["cream","كريم",1,"Put this cream on the burn."],["dose","جرعة",2,"Don't take more than the dose."],["syrup","شراب",2,"This syrup is for children."],["allergy","حساسية",2,"Do you have any allergies?"],["over the counter","من غير روشتة",3,"You can buy it over the counter."],["antibiotics","مضاد حيوي",2,"You need a prescription for antibiotics."],["drowsy","بيجيب نعاس",3,"This medicine can make you drowsy."],["on an empty stomach","على معدة فاضية",3,"Don't take it on an empty stomach."],["rash","طفح جلدي",2,"I have a rash on my arm."]],
+ph:[["Do you have something for a headache?","عندك حاجة للصداع؟"],["How many should I take?","آخد كام؟"],["Do I need a prescription?","محتاج روشتة؟"],["Is it safe for children?","آمن للأطفال؟"],["Before or after meals?","قبل الأكل ولا بعده؟"],["Are there any side effects?","فيه آثار جانبية؟"]],
+dlg:{title:"Buying medicine",you:"a customer",them:"a pharmacist",lines:[["t","Hello, how can I help?"],["y","Hi. Do you have something for a bad cough?"],["t","Is it a dry cough or a chesty cough?"],["y","Dry, mostly at night."],["t","This syrup is good. Take ten millilitres three times a day."],["y","Before or after meals?"],["t","After meals. It may make you a little drowsy."],["y","OK. Is it safe for my son? He's eight."]]},
+pron:["Do you have something for a bad cough?","You can buy it over the counter.","This medicine can make you drowsy.","Don't take it on an empty stomach."],
+ch:["Explain to a pharmacist that you have a cold and need something.","Should people buy medicine without seeing a doctor? Give your opinion."]}
+);
+
+TOPICS.push(
+{id:"fitness",field:"Health",title:"Gym & fitness",ar:"الجيم واللياقة",
+v:[["exercise","تمرين",1,"I exercise four times a week."],["gym","جيم",1,"The gym opens at six."],["run","يجري",1,"I run in the park."],["weights","أوزان / حديد",1,"I lift weights on Mondays."],["stretch","يعمل إطالة",2,"Always stretch before you run."],["trainer","مدرب",2,"My trainer is very strict."],["sore","عضلاته مكسرة",2,"My legs are sore today."],["routine","روتين",2,"I need a new gym routine."],["lose weight","يخس",2,"I want to lose five kilos."],["build muscle","يبني عضل",3,"He's trying to build muscle."],["endurance","قدرة تحمّل",3,"Swimming builds endurance."],["work out","يتمرن",1,"Do you work out?"]],
+ph:[["How often do you train?","بتتمرن كل قد إيه؟"],["I'm trying to get in shape.","بحاول أرجع فورمة."],["Can you show me how to use this machine?","ممكن توريني الجهاز ده بيشتغل إزاي؟"],["How many sets should I do?","أعمل كام مجموعة؟"],["I'm exhausted!","أنا مرهق جدًا!"],["No pain, no gain.","مفيش نتيجة من غير تعب."]],
+dlg:{title:"First day at the gym",you:"a new member",them:"a personal trainer",lines:[["t","Welcome! What are your goals?"],["y","I'd like to lose some weight and get fitter."],["t","Great. How often can you come to the gym?"],["y","Three times a week, after work."],["t","OK. We'll start with twenty minutes of cardio, then some weights."],["y","Sounds good. I haven't exercised for a long time, though."],["t","No problem. We'll start slowly. Always stretch first."],["y","Will I be sore tomorrow?"]]},
+pron:["I'm trying to get back in shape.","Always stretch before you run.","Swimming is great for building endurance.","How many sets should I do?"],
+ch:["Describe your exercise routine, or the one you'd like to have.","Why do many people stop going to the gym after a month? How can they stay motivated?"]},
+
+{id:"car",field:"Everyday life",title:"Cars & the mechanic",ar:"العربيات والميكانيكي",
+v:[["car","عربية",1,"My car is ten years old."],["drive","يسوق",1,"I drive to work every day."],["petrol","بنزين",1,"I need to buy petrol."],["tyre","كاوتش",2,"I have a flat tyre."],["brakes","فرامل",2,"The brakes make a noise."],["engine","موتور",2,"The engine won't start."],["service","صيانة دورية",2,"The car needs a service."],["breakdown","عطل في الطريق",3,"We had a breakdown on the desert road."],["oil change","تغيير زيت",2,"It's time for an oil change."],["warning light","لمبة تحذير",3,"A warning light came on."],["estimate","تقدير تكلفة",3,"Can you give me an estimate?"],["park","يركن",1,"Where can I park?"]],
+ph:[["There's a strange noise.","فيه صوت غريب."],["How much will it cost?","هتتكلف كام؟"],["When will it be ready?","هتخلص إمتى؟"],["Can you check the brakes?","ممكن تكشف على الفرامل؟"],["Fill it up, please.","فوّلها لو سمحت."],["The battery is dead.","البطارية فاضية."]],
+dlg:{title:"At the mechanic",you:"a car owner",them:"a mechanic",lines:[["t","What's the problem with the car?"],["y","There's a strange noise when I brake."],["t","How long has it been doing that?"],["y","About a week. And a warning light came on yesterday."],["t","It's probably the brake pads. I'll take a look."],["y","How much will it cost?"],["t","Around two thousand pounds, including the parts."],["y","OK. When will it be ready?"]]},
+pron:["There's a strange noise when I brake.","A warning light came on yesterday.","Can you give me an estimate, please?","It's time for an oil change."],
+ch:["Describe a problem you had with a car or transport.","Should people in big cities own cars? Explain your view."]},
+
+{id:"clothes",field:"Everyday life",title:"Clothes & style",ar:"اللبس والستايل",
+v:[["shirt","قميص",1,"I need a new white shirt."],["trousers","بنطلون",1,"These trousers are too long."],["shoes","جزمة / شوز",1,"I bought new shoes."],["suit","بدلة",1,"I wear a suit to meetings."],["casual","كاجوال",2,"Fridays are casual at work."],["formal","رسمي",2,"It's a formal event."],["fit","مقاسه مظبوط",2,"This jacket fits perfectly."],["tight","ضيق",2,"The shoes are a bit tight."],["suit someone","لايق على حد",3,"That colour really suits you."],["dress code","قواعد اللبس",3,"What's the dress code?"],["outfit","طقم / لبس",2,"I like your outfit."],["trendy","موضة",3,"That's very trendy right now."]],
+ph:[["What should I wear?","ألبس إيه؟"],["Does this look OK?","ده شكله كويس؟"],["It's a bit too big.","واسع شوية."],["Do you have it in a medium?","موجود ميديم؟"],["You look great!","شكلك حلو جدًا!"],["I prefer simple clothes.","بحب اللبس البسيط."]],
+dlg:{title:"Shopping for a suit",you:"a customer",them:"a shop assistant",lines:[["t","Hello! Are you looking for anything special?"],["y","Yes, I need a suit for a business event."],["t","Is it very formal?"],["y","Quite formal. Dark blue or grey, I think."],["t","This navy one is very popular. Would you like to try it on?"],["y","Yes, please. Do you have it in a size fifty?"],["t","Here you are. The fitting room is on the left."],["y","It's a bit tight around the shoulders. Do you have a bigger size?"]]},
+pron:["That colour really suits you.","What's the dress code for the event?","The jacket is a bit tight.","Do you have it in a medium?"],
+ch:["Describe what you usually wear at work and at the weekend.","Do clothes matter in business? Explain with examples."]},
+
+{id:"scheduling",field:"Work",title:"Appointments & scheduling",ar:"المواعيد والتنسيق",
+v:[["appointment","ميعاد",1,"I have an appointment at ten."],["available","متاح / فاضي",1,"Are you available on Tuesday?"],["busy","مشغول",1,"I'm busy all morning."],["calendar","أجندة",1,"Let me check my calendar."],["reschedule","يغيّر الميعاد",2,"Can we reschedule?"],["cancel","يلغي",1,"I need to cancel the meeting."],["postpone","يأجل",2,"They postponed the meeting to next week."],["suit","يناسب",2,"Does Thursday suit you?"],["confirm","يأكد",2,"I'll confirm by email."],["double-booked","عنده ميعادين في نفس الوقت",3,"Sorry, I'm double-booked at three."],["slot","فترة متاحة",3,"I have a free slot at four."],["tentatively","مبدئيًا",3,"Let's tentatively say Monday."]],
+ph:[["When are you free?","فاضي إمتى؟"],["How about Wednesday at eleven?","إيه رأيك الأربع الساعة ١١؟"],["That works for me.","ده يناسبني."],["I'm afraid I can't make it.","للأسف مش هقدر أجي."],["Something came up.","حصل ظرف."],["I'll send you an invite.","هبعتلك دعوة."]],
+dlg:{title:"Setting up a meeting",you:"a salesperson",them:"a client's assistant",lines:[["t","Good morning, Mr Hassan's office."],["y","Hi, this is Ahmed. I'd like to set up a meeting with Mr Hassan."],["t","Sure. What's it about?"],["y","A follow-up on our proposal. It will take about thirty minutes."],["t","He's free on Tuesday at ten or Thursday at two."],["y","Thursday at two works for me."],["t","Great. I'll put it in his calendar."],["y","Thank you. I'll send an invite to confirm."]]},
+pron:["Let me check my calendar first.","Does Thursday at two suit you?","Sorry, I'm double-booked at three.","Can we reschedule for next week?"],
+ch:["Call a doctor's clinic and book an appointment.","You must cancel an important meeting at the last minute. Apologise and suggest a new time."]},
+
+{id:"holidays",field:"Social",title:"Ramadan, Eid & celebrations",ar:"رمضان والعيد والمناسبات",
+v:[["holiday","إجازة / عيد",1,"Tomorrow is a holiday."],["celebrate","يحتفل",1,"How do you celebrate Eid?"],["gift","هدية",1,"We give children gifts."],["fast","يصوم",2,"Muslims fast during Ramadan."],["break the fast","يفطر",2,"We break the fast at sunset."],["tradition","عادة / تقليد",2,"It's an old tradition."],["decorations","زينة",2,"The streets are full of decorations."],["get together","تجمّع",2,"We have a big family get-together."],["festive","فيه جو احتفالي",3,"The atmosphere is very festive."],["occasion","مناسبة",3,"It's a special occasion."],["customs","عادات",3,"Every country has its own customs."],["feast","وليمة / عزومة كبيرة",3,"We have a big feast on the first day."]],
+ph:[["Happy Eid!","عيد سعيد!"],["Ramadan Kareem!","رمضان كريم!"],["What do you usually do on...?","عادة بتعملوا إيه في...؟"],["It's my favourite time of year.","ده أحلى وقت في السنة عندي."],["We stay up late.","بنسهر لوقت متأخر."],["You're welcome to join us.","أهلًا بيك تيجي معانا."]],
+dlg:{title:"Explaining Ramadan to a foreign colleague",you:"yourself",them:"a foreign colleague",lines:[["t","I heard Ramadan starts next week. What happens?"],["y","Muslims fast from sunrise to sunset for a month."],["t","No food at all during the day?"],["y","No food or water. We break the fast at sunset with dates and water."],["t","That sounds hard. Do working hours change?"],["y","Yes, most companies work shorter hours."],["t","What's your favourite part?"],["y","The family dinners and the atmosphere at night. You're welcome to join us one day."]]},
+pron:["Muslims fast from sunrise to sunset.","We break the fast with dates and water.","The atmosphere is very festive at night.","You're very welcome to join us."],
+ch:["Describe how your family celebrates Eid.","Compare a celebration in your country with one from another country."]},
+
+{id:"parents",field:"Family",title:"Kids & school",ar:"الأطفال والمدرسة",
+v:[["school","مدرسة",1,"My son goes to a private school."],["teacher","مدرّس",1,"His teacher is very kind."],["grade","سنة دراسية / درجة",1,"She's in grade four."],["homework","واجب",1,"He does his homework after lunch."],["report card","الشهادة",2,"We got his report card today."],["behaviour","سلوك",2,"His behaviour has improved."],["tutor","مدرس خصوصي",2,"We hired a maths tutor."],["parent-teacher meeting","اجتماع أولياء الأمور",3,"The parent-teacher meeting is on Monday."],["screen time","وقت الشاشات",3,"We limit his screen time."],["struggle with","بيعاني في",3,"She struggles with reading."],["extra-curricular activities","أنشطة إضافية",3,"He does swimming and chess."],["pick up","يجيبه من المدرسة",2,"I pick him up at two."]],
+ph:[["How is he doing at school?","مستواه إيه في المدرسة؟"],["What's his favourite subject?","إيه أكتر مادة بيحبها؟"],["He's doing really well.","هو كويس جدًا."],["Could you give him extra practice?","ممكن تديله تمارين زيادة؟"],["Kids grow up so fast.","العيال بيكبروا بسرعة."],["It's bedtime!","يلا ميعاد النوم!"]],
+dlg:{title:"Meeting your child's teacher",you:"a parent",them:"a teacher",lines:[["t","Thanks for coming. Youssef is a lovely student."],["y","Thank you. How is he doing in English?"],["t","Very well in speaking, but his writing needs some work."],["y","I see. What can we do at home?"],["t","Ask him to write a short diary every day."],["y","That's a good idea. How is his behaviour in class?"],["t","Excellent. He helps the other children a lot."],["y","I'm happy to hear that. Thank you for your help."]]},
+pron:["How is he doing at school this term?","We limit his screen time on weekdays.","She struggles a bit with reading.","The parent-teacher meeting is on Monday."],
+ch:["Describe your school days when you were a child.","How much screen time is OK for children? Give your opinion."]},
+
+{id:"movies",field:"Free time",title:"Films & TV series",ar:"الأفلام والمسلسلات",
+v:[["film","فيلم",1,"Let's watch a film tonight."],["series","مسلسل",1,"I'm watching a new series."],["actor","ممثل",1,"He's my favourite actor."],["episode","حلقة",1,"I watched three episodes."],["funny","مضحك",1,"It's a really funny comedy."],["plot","القصة / الحبكة",2,"The plot was too slow."],["ending","النهاية",2,"I didn't like the ending."],["recommend","يرشّح",2,"Can you recommend a good series?"],["subtitles","ترجمة",2,"I watch with English subtitles."],["spoiler","حرق للأحداث",3,"No spoilers, please!"],["gripping","مشوّق جدًا",3,"It's a gripping thriller."],["overrated","واخد أكبر من حجمه",3,"I think that film is overrated."]],
+ph:[["Have you seen...?","شفت...؟"],["What's it about?","بيتكلم عن إيه؟"],["It's based on a true story.","مبني على قصة حقيقية."],["I couldn't stop watching.","مقدرتش أبطل أتفرج."],["It wasn't my cup of tea.","مش ذوقي."],["Don't tell me the ending!","متقوليش النهاية!"]],
+dlg:{title:"Recommending a series",you:"yourself",them:"a friend",lines:[["t","I need a new series to watch. Any ideas?"],["y","Have you seen the new crime series on Netflix?"],["t","No. What's it about?"],["y","It's about a detective in London. It's based on a true story."],["t","Is it good?"],["y","It's gripping. I watched five episodes in one night."],["t","Ha! Is it in English?"],["y","Yes. I watch it with English subtitles. It's great practice."]]},
+pron:["Can you recommend a good series?","It's based on a true story.","No spoilers, please!","I think that film is a bit overrated."],
+ch:["Describe a film you love and why.","Can watching series in English really improve your speaking? How?"]},
+
+{id:"music",field:"Free time",title:"Music & concerts",ar:"المزيكا والحفلات",
+v:[["song","أغنية",1,"This is my favourite song."],["singer","مطرب",1,"She's a great singer."],["listen","يسمع",1,"I listen to music in the car."],["band","فرقة",1,"Which band do you like?"],["concert","حفلة",1,"We went to a concert last night."],["lyrics","كلمات الأغنية",2,"I love the lyrics."],["instrument","آلة موسيقية",2,"Do you play an instrument?"],["catchy","بتعلق في الودن",3,"It's a really catchy song."],["live","لايف",2,"I prefer live music."],["playlist","قايمة أغاني",2,"I made a playlist for the gym."],["genre","نوع (موسيقي)",3,"What genre do you like?"],["nostalgic","بيفكّر بالماضي",3,"Old songs make me nostalgic."]],
+ph:[["What kind of music are you into?","بتحب نوع مزيكا إيه؟"],["I can't get this song out of my head.","الأغنية دي مش خارجة من دماغي."],["Turn it up!","علّي الصوت!"],["Who sings this?","مين بيغني دي؟"],["I used to play the guitar.","كنت بلعب جيتار زمان."],["The atmosphere was amazing.","الجو كان تحفة."]],
+dlg:{title:"Talking about music",you:"yourself",them:"a friend",lines:[["t","What kind of music are you into?"],["y","Mostly Arabic pop, but I like some English songs too."],["t","Who's your favourite singer?"],["y","Amr Diab. I've been to three of his concerts."],["t","Wow. Do you play an instrument?"],["y","I used to play the oud when I was younger."],["t","Why did you stop?"],["y","I didn't have time after university. I'd like to start again."]]},
+pron:["What kind of music are you into?","It's a really catchy song.","I used to play the oud.","Old songs make me feel nostalgic."],
+ch:["Talk about a song that is special to you.","Is music important for learning a language? Explain."]},
+
+{id:"social",field:"Technology",title:"Social media",ar:"السوشيال ميديا",
+v:[["post","بوست",1,"I posted a photo."],["like","لايك",1,"It got a hundred likes."],["follow","يتابع",1,"Do you follow her?"],["share","يشير",1,"Please share this post."],["comment","كومنت",1,"Leave a comment below."],["followers","متابعين",2,"He has ten thousand followers."],["influencer","إنفلونسر",2,"She's a food influencer."],["go viral","ينتشر جدًا",2,"The video went viral."],["fake news","أخبار كاذبة",2,"Be careful of fake news."],["addicted","مدمن",2,"I'm addicted to my phone."],["privacy","الخصوصية",3,"Check your privacy settings."],["algorithm","الخوارزمية",3,"The algorithm shows you similar posts."]],
+ph:[["Did you see my post?","شفت البوست بتاعي؟"],["I spend too much time on my phone.","بقضي وقت كتير على الموبايل."],["Tag me in the photo.","اعملي تاج في الصورة."],["I deleted the app.","مسحت الأبلكيشن."],["Don't believe everything you read online.","متصدقش كل اللي تقراه أونلاين."],["It's a great way to stay in touch.","طريقة حلوة نفضل على تواصل."]],
+dlg:{title:"Talking about social media",you:"yourself",them:"a friend",lines:[["t","How much time do you spend on social media every day?"],["y","Honestly, about three hours. Mostly on LinkedIn and Facebook."],["t","That's a lot! Is it for work?"],["y","Partly. I post about my industry on LinkedIn."],["t","Does it help your business?"],["y","Yes, some clients find me through my posts."],["t","And Facebook?"],["y","That's just for family. I'm trying to use it less."]]},
+pron:["The video went viral overnight.","Please check your privacy settings.","I spend too much time on my phone.","The algorithm shows you similar posts."],
+ch:["How do you use social media every day?","Is social media good or bad for young people? Give both sides and your opinion."]},
+
+{id:"news",field:"Opinions",title:"News & current events",ar:"الأخبار",
+v:[["news","أخبار",1,"Did you hear the news?"],["headline","العنوان الرئيسي",2,"I only read the headlines."],["article","مقال",1,"I read an interesting article."],["government","الحكومة",1,"The government announced new rules."],["announce","يعلن",2,"They announced a new project."],["economy","الاقتصاد",2,"The economy is growing slowly."],["election","انتخابات",2,"The election is next month."],["source","مصدر",2,"Which source do you trust?"],["breaking news","خبر عاجل",3,"There's breaking news on TV."],["biased","متحيز",3,"That channel is very biased."],["crisis","أزمة",3,"The country is facing an energy crisis."],["keep up with","يتابع آخر الأخبار",3,"I try to keep up with the news."]],
+ph:[["Did you hear about...?","سمعت عن...؟"],["I read somewhere that...","قريت في حتة إن..."],["According to the news...","حسب الأخبار..."],["I'm not sure that's true.","مش متأكد إن ده حقيقي."],["It's all over the news.","مالي الأخبار."],["What do you think about it?","رأيك إيه في الموضوع؟"]],
+dlg:{title:"Discussing a news story",you:"yourself",them:"a colleague",lines:[["t","Did you hear about the new metro line?"],["y","Yes, I read an article about it this morning."],["t","They say it will open next year."],["y","According to the news, the first part opens in June."],["t","Do you think it will help with the traffic?"],["y","I hope so. Many people will leave their cars at home."],["t","Where do you usually get your news?"],["y","Mostly from news apps. I try to check more than one source."]]},
+pron:["Did you hear the news this morning?","According to the news, it opens in June.","I try to keep up with the news.","That channel is very biased."],
+ch:["Talk about a news story you read this week.","How can people tell real news from fake news? Give practical tips."]},
+
+{id:"environment",field:"Opinions",title:"Environment & climate",ar:"البيئة والمناخ",
+v:[["pollution","تلوث",1,"Air pollution is a big problem."],["recycle","يعيد تدوير",1,"We recycle plastic and paper."],["plastic","بلاستيك",1,"Avoid plastic bags."],["waste","مخلفات / هدر",2,"We waste too much food."],["climate change","تغير المناخ",2,"Climate change affects everyone."],["save energy","يوفر طاقة",2,"Turn off the lights to save energy."],["solar panels","ألواح شمسية",2,"We installed solar panels."],["sustainable","مستدام",3,"We need sustainable solutions."],["carbon footprint","البصمة الكربونية",3,"Flying increases your carbon footprint."],["renewable","متجدد",3,"Egypt is investing in renewable energy."],["water shortage","نقص المياه",3,"Water shortage is a real risk."],["reuse","يستخدم تاني",2,"Reuse your bags."]],
+ph:[["We all need to do our part.","لازم كلنا نعمل اللي علينا."],["It's a serious problem.","مشكلة خطيرة."],["Small changes make a big difference.","التغييرات الصغيرة بتفرق كتير."],["The government should...","الحكومة المفروض..."],["I try to use less plastic.","بحاول أستخدم بلاستيك أقل."],["It's getting hotter every year.","الجو بيسخن كل سنة."]],
+dlg:{title:"Discussing the environment",you:"yourself",them:"a friend",lines:[["t","Have you noticed how hot the summers are getting?"],["y","Yes, it's getting hotter every year. It's climate change."],["t","Do you think we can do anything about it?"],["y","I think small changes make a difference, like using less plastic."],["t","But isn't it really the governments' job?"],["y","Both. Governments should invest in renewable energy."],["t","Egypt has some big solar projects, right?"],["y","Yes, Benban is one of the largest solar parks in the world."]]},
+pron:["Climate change affects everyone.","We need more sustainable solutions.","Egypt is investing in renewable energy.","Small changes make a big difference."],
+ch:["What do you do to protect the environment?","What are the biggest environmental problems in your country, and how can they be solved?"]}
+);
+
+TOPICS.push(
+{id:"people",field:"Social",title:"Describing people",ar:"وصف الأشخاص",
+v:[["tall","طويل",1,"He's tall and slim."],["short","قصير",1,"She has short hair."],["kind","طيب",1,"My boss is very kind."],["friendly","ودود",1,"Everyone is friendly here."],["shy","خجول",2,"He's a bit shy at first."],["confident","واثق من نفسه",2,"She's a confident speaker."],["hard-working","مجتهد",2,"He's very hard-working."],["patient","صبور",2,"Teachers need to be patient."],["easy-going","رايق ومش بيتعصب",3,"My brother is very easy-going."],["stubborn","عنيد",3,"He can be a bit stubborn."],["reliable","يُعتمد عليه",3,"She's the most reliable person on the team."],["in his thirties","في التلاتينات",3,"He's in his early thirties."]],
+ph:[["What does he look like?","شكله إيه؟"],["What's she like?","شخصيتها عاملة إزاي؟"],["He's a really nice guy.","هو شخص لطيف جدًا."],["She's great to work with.","الشغل معاها حلو جدًا."],["He has a great sense of humour.","دمه خفيف جدًا."],["They're very different.","هما مختلفين جدًا."]],
+dlg:{title:"Describing a new colleague",you:"yourself",them:"a friend",lines:[["t","So, what's your new manager like?"],["y","She's very friendly, but quite strict about deadlines."],["t","Is that a problem?"],["y","Not really. She's fair and very reliable."],["t","What does she look like? I might know her."],["y","She's tall, with short dark hair, in her early forties."],["t","Hmm, I'm not sure. Is she easy to talk to?"],["y","Yes, very. And she has a great sense of humour."]]},
+pron:["She's tall, with short dark hair.","He can be a bit stubborn sometimes.","She's the most reliable person on the team.","He has a great sense of humour."],
+ch:["Describe your best friend: looks and personality.","What makes a good colleague? Describe three qualities with examples."]},
+
+{id:"feelings",field:"Opinions",title:"Feelings & emotions",ar:"المشاعر",
+v:[["happy","مبسوط",1,"I'm really happy today."],["sad","زعلان",1,"She looks sad."],["angry","متعصب",1,"He was angry about the delay."],["tired","تعبان",1,"I'm tired after work."],["worried","قلقان",2,"I'm worried about the exam."],["nervous","متوتر",2,"I always get nervous before presentations."],["excited","متحمس",2,"I'm so excited about the trip!"],["disappointed","محبط",2,"I was disappointed with the result."],["stressed out","مضغوط جدًا",3,"I'm stressed out this week."],["relieved","ارتحت",3,"I was relieved when it was over."],["overwhelmed","مش ملاحق",3,"I feel overwhelmed with work."],["grateful","ممتن",3,"I'm grateful for your support."]],
+ph:[["How are you feeling?","حاسس بإيه؟"],["What's wrong?","مالك؟"],["I'm a bit down today.","مزاجي مش أحسن حاجة النهارده."],["That must be hard.","أكيد ده صعب."],["I'm so proud of you.","أنا فخور بيك جدًا."],["Don't worry, it'll be fine.","متقلقش، هتبقى كويسة."]],
+dlg:{title:"Supporting a stressed friend",you:"a friend",them:"your stressed friend",lines:[["t","Sorry, I'm in a bad mood today."],["y","That's OK. What's wrong?"],["t","I have three deadlines this week and I'm completely stressed out."],["y","That must be hard. Is there anything I can do?"],["t","Not really. I just feel overwhelmed."],["y","Maybe make a list and start with the most important task."],["t","You're right. I'll try that."],["y","And take a break tonight. You'll feel better tomorrow."]]},
+pron:["I always get nervous before presentations.","I feel a bit overwhelmed with work.","I was so relieved when it was over.","I'm really grateful for your support."],
+ch:["Describe a time you felt really proud.","How do you deal with stress? Give advice to someone who feels overwhelmed."]},
+
+{id:"opinions",field:"Opinions",title:"Agreeing & disagreeing",ar:"الموافقة والاعتراض",
+v:[["opinion","رأي",1,"In my opinion, it's a good idea."],["agree","يوافق",1,"I agree with you."],["disagree","يعترض",1,"I disagree."],["point","نقطة",1,"That's a good point."],["exactly","بالظبط",1,"Exactly! That's what I think."],["on the other hand","من ناحية تانية",2,"On the other hand, it's expensive."],["convince","يقنع",2,"You've convinced me."],["argument","حجة",2,"That's a strong argument."],["to some extent","لحد ما",3,"I agree to some extent."],["fair point","نقطة منطقية",3,"Fair point, but..."],["devil's advocate","يلعب دور المعارض",3,"Let me play devil's advocate."],["see eye to eye","متفقين تمامًا",3,"We don't always see eye to eye."]],
+ph:[["I see your point, but...","فاهم قصدك، بس..."],["I couldn't agree more.","متفق جدًا."],["I'm not so sure about that.","مش متأكد من ده."],["That's true, but have you thought about...?","صح، بس فكرت في...؟"],["Let's agree to disagree.","نتفق إننا مختلفين."],["What makes you say that?","إيه اللي يخليك تقول كده؟"]],
+dlg:{title:"A friendly debate",you:"yourself",them:"a friend",lines:[["t","I think everyone should work from home. Offices are a waste of time."],["y","I see your point, but I'm not so sure about that."],["t","Why not? No traffic, more time with family..."],["y","That's true, but it's harder to learn from colleagues at home."],["t","Fair point. But you can use video calls."],["y","Yes, to some extent. But new employees need people around them."],["t","So what's the answer?"],["y","Maybe a mix. Two or three days in the office is a good balance."]]},
+pron:["I see your point, but I'm not so sure.","I couldn't agree more.","I agree with you to some extent.","Let me play devil's advocate for a moment."],
+ch:["Give your opinion on this: Children should learn English from age three.","Argue both sides: Should companies allow four-day working weeks? Then give your view."]},
+
+{id:"invitations",field:"Social",title:"Invitations & making plans",ar:"العزومات وترتيب الخروجات",
+v:[["invite","يعزم",1,"I'd like to invite you to dinner."],["party","حفلة",1,"We're having a party on Friday."],["free","فاضي",1,"Are you free on Saturday?"],["plan","خطة",1,"Do you have any plans tonight?"],["join","ينضم",2,"Would you like to join us?"],["accept","يقبل",2,"I'm happy to accept."],["decline","يعتذر عن دعوة",3,"I'm afraid I have to decline."],["rain check","نخليها مرة تانية",3,"Can I take a rain check?"],["host","صاحب العزومة",2,"Who's hosting the party?"],["RSVP","رد على الدعوة",3,"Please RSVP by Thursday."],["bring","يجيب معاه",1,"Should I bring anything?"],["last-minute","في آخر لحظة",3,"Sorry for the last-minute change."]],
+ph:[["Would you like to come?","تحب تيجي؟"],["I'd love to!","يا ريت!"],["Sorry, I can't make it.","آسف، مش هقدر."],["How about next week instead?","إيه رأيك الأسبوع الجاي بدلها؟"],["What time should I come?","آجي الساعة كام؟"],["Thanks for having me.","شكرًا على العزومة."]],
+dlg:{title:"Inviting a friend",you:"yourself",them:"a friend",lines:[["t","Hey! Are you free on Friday evening?"],["y","I think so. Why?"],["t","We're having a few friends over for dinner. Would you like to come?"],["y","I'd love to! What time?"],["t","Around eight. It's at my new flat in Zayed."],["y","Great. Should I bring anything?"],["t","Maybe some dessert, if you like."],["y","Sure. I'll bring some kunafa. See you on Friday!"]]},
+pron:["Would you like to join us for dinner?","I'd love to! What time should I come?","Can I take a rain check this time?","Sorry for the last-minute change."],
+ch:["Invite a friend to a weekend trip and agree on the details.","Politely decline an invitation from your manager and suggest something else."]},
+
+{id:"apologies",field:"Social",title:"Apologising & thanking",ar:"الاعتذار والشكر",
+v:[["sorry","آسف",1,"Sorry I'm late."],["thank you","شكرًا",1,"Thank you for your help."],["excuse me","لو سمحت",1,"Excuse me, is this seat free?"],["mistake","غلطة",1,"It was my mistake."],["apologise","يعتذر",2,"I apologise for the confusion."],["appreciate","يقدّر",2,"I really appreciate it."],["forgive","يسامح",2,"Please forgive me."],["no worries","ولا يهمك",2,"No worries at all."],["my fault","غلطتي",2,"It's completely my fault."],["make it up to you","هعوضك",3,"Let me make it up to you."],["inconvenience","إزعاج",3,"Sorry for any inconvenience."],["much obliged","ممنون جدًا",3,"I'm much obliged for your help."]],
+ph:[["I'm so sorry about that.","أنا آسف جدًا على كده."],["It won't happen again.","مش هتتكرر."],["Thanks a million.","ألف شكر."],["I owe you one.","ليك عندي واحدة."],["Don't mention it.","العفو."],["That's very kind of you.","ده لطف منك."]],
+dlg:{title:"Apologising for a mistake",you:"an employee",them:"a client",lines:[["t","Hi. I received the invoice, but the amount is wrong."],["y","Oh no, I'm so sorry about that. Let me check."],["t","You charged us for twelve licences, but we only have ten."],["y","You're right. It's completely my fault."],["t","These things happen. Can you send a new one?"],["y","Of course. I'll send the correct invoice within an hour."],["t","Thanks, I appreciate it."],["y","Thank you for your patience. It won't happen again."]]},
+pron:["I'm so sorry about the mistake.","I really appreciate your help.","It's completely my fault.","Thank you for your patience."],
+ch:["Apologise to a friend for missing their birthday.","Write and say a formal apology to a client for a delayed project, with a solution."]},
+
+{id:"online",field:"Everyday life",title:"Online shopping & delivery",ar:"الشراء أونلاين والتوصيل",
+v:[["order online","يطلب أونلاين",1,"I order groceries online."],["cart","عربة التسوق",1,"Add it to your cart."],["delivery","توصيل",1,"Delivery is free."],["track","يتابع",2,"You can track your order."],["cash on delivery","الدفع عند الاستلام",2,"I always choose cash on delivery."],["review","تقييم",2,"I read the reviews first."],["promo code","كود خصم",2,"Use this promo code for ten percent off."],["damaged","متضرر / بايظ",2,"The box arrived damaged."],["courier","مندوب التوصيل",3,"The courier called me."],["return policy","سياسة الاسترجاع",3,"What's the return policy?"],["scam","نصباية",3,"That website is a scam."],["out for delivery","خرج للتوصيل",3,"Your order is out for delivery."]],
+ph:[["Where's my order?","الأوردر بتاعي فين؟"],["It hasn't arrived yet.","لسه موصلش."],["It's not what I ordered.","ده مش اللي طلبته."],["How do I return it?","أرجعه إزاي؟"],["Can I change the address?","ممكن أغير العنوان؟"],["Is delivery free?","التوصيل مجاني؟"]],
+dlg:{title:"Wrong item delivered",you:"a customer",them:"an online store's support agent",lines:[["t","Hello, thanks for contacting us. How can I help?"],["y","Hi. My order arrived today, but it's not what I ordered."],["t","I'm sorry. Could I have your order number?"],["y","Yes, it's 7 7 3 1 5. I ordered black headphones and got white ones."],["t","I see. Would you like an exchange or a refund?"],["y","An exchange, please. How does it work?"],["t","Our courier will collect the white ones and bring the black ones tomorrow."],["y","Great. Do I need to pay for delivery?"]]},
+pron:["My order hasn't arrived yet.","You can track your order online.","What's your return policy?","Your order is out for delivery."],
+ch:["Describe the last thing you bought online.","What are the risks of online shopping, and how can people protect themselves?"]},
+
+{id:"sightseeing",field:"Travel",title:"Tourism & sightseeing",ar:"السياحة والمزارات",
+v:[["museum","متحف",1,"The museum opens at nine."],["tour","جولة",1,"We took a tour of the city."],["guide","مرشد",1,"Our guide spoke great English."],["pyramids","الأهرامات",1,"Have you seen the Pyramids?"],["ancient","قديم جدًا / أثري",2,"It's an ancient temple."],["souvenir","تذكار",2,"I bought some souvenirs."],["entrance fee","رسم الدخول",2,"The entrance fee is two hundred pounds."],["crowded","زحمة",2,"It gets crowded at noon."],["breathtaking","يخطف الأنفاس",3,"The view is breathtaking."],["off the beaten track","مكان مش معروف للسياح",3,"Siwa is off the beaten track."],["hidden gem","مكان حلو ومش مشهور",3,"This café is a hidden gem."],["itinerary","برنامج الرحلة",3,"Here's a three-day itinerary."]],
+ph:[["What's worth seeing here?","إيه اللي يستاهل يتشاف هنا؟"],["How long should I spend there?","أقعد هناك قد إيه؟"],["Is it worth the money?","يستاهل الفلوس؟"],["Could you take a photo of us?","ممكن تصورنا؟"],["You should definitely visit...","لازم تزور..."],["Go early to avoid the crowds.","روح بدري عشان الزحمة."]],
+dlg:{title:"Recommending places in Egypt",you:"a local",them:"a tourist",lines:[["t","It's my first time in Egypt. What's worth seeing?"],["y","You should definitely see the Pyramids and the Grand Egyptian Museum."],["t","How long should I spend at the museum?"],["y","At least half a day. It's huge."],["t","Any tips for the Pyramids?"],["y","Go early in the morning to avoid the crowds and the heat."],["t","What about outside Cairo?"],["y","Luxor and Aswan are amazing. And Siwa is a hidden gem."]]},
+pron:["You should definitely visit the museum.","Go early to avoid the crowds.","The view from the top is breathtaking.","Siwa is a bit off the beaten track."],
+ch:["Recommend three places in your city to a tourist.","Plan a three-day trip in Egypt for a foreign friend and explain your choices."]},
+
+{id:"insurance",field:"Money",title:"Insurance",ar:"التأمين",
+v:[["insurance","تأمين",1,"Do you have car insurance?"],["cover","يغطي",2,"Does it cover dental care?"],["policy","وثيقة تأمين",2,"My policy expires in May."],["claim","مطالبة",2,"I made a claim after the accident."],["premium","القسط",3,"The premium went up this year."],["health insurance","تأمين صحي",1,"My company gives me health insurance."],["damage","ضرر / تلفيات",2,"The damage was about ten thousand pounds."],["accident","حادثة",1,"I had a small accident."],["deductible","المبلغ اللي بتتحمله الأول",3,"There's a deductible of one thousand pounds."],["renew","يجدد",2,"I need to renew my policy."],["life insurance","تأمين على الحياة",2,"He bought life insurance."],["takaful","تأمين تكافلي",3,"Takaful is insurance based on Islamic principles."]],
+ph:[["What does the policy cover?","الوثيقة بتغطي إيه؟"],["How do I make a claim?","أعمل مطالبة إزاي؟"],["How much is the monthly premium?","القسط الشهري كام؟"],["Is this included?","ده داخل؟"],["When does it expire?","بتنتهي إمتى؟"],["Could you send me the details?","ممكن تبعتلي التفاصيل؟"]],
+dlg:{title:"Making a car insurance claim",you:"a customer",them:"an insurance agent",lines:[["t","Good morning. How can I help you?"],["y","Hi, I had a small car accident yesterday and I'd like to make a claim."],["t","I'm sorry to hear that. Was anyone hurt?"],["y","No, thank God. Just damage to the back of the car."],["t","Could I have your policy number?"],["y","Yes, it's on my card. Do I need a police report?"],["t","Yes, please send it with photos of the damage."],["y","OK. How long does the claim usually take?"]]},
+pron:["What exactly does the policy cover?","I'd like to make a claim, please.","The premium went up this year.","My policy expires at the end of May."],
+ch:["Explain what kinds of insurance you have and why.","Is insurance worth the money? Give your opinion with examples."]},
+
+{id:"wedding",field:"Family",title:"Weddings & family events",ar:"الأفراح والمناسبات العائلية",
+v:[["wedding","فرح",1,"The wedding is in June."],["bride","العروسة",1,"The bride looked beautiful."],["groom","العريس",1,"The groom was nervous."],["guest","ضيف",1,"There were three hundred guests."],["engaged","مخطوب",2,"They got engaged last year."],["venue","مكان المناسبة",2,"The venue was by the Nile."],["congratulations","مبروك",1,"Congratulations on your wedding!"],["reception","حفلة الاستقبال",2,"The reception starts at eight."],["honeymoon","شهر العسل",2,"They went to Sharm for their honeymoon."],["anniversary","عيد جواز",2,"Today is our tenth anniversary."],["bride-to-be","العروسة المستقبلية",3,"The bride-to-be is my cousin."],["tie the knot","يتجوزوا",3,"They're tying the knot next month."]],
+ph:[["Congratulations! I'm so happy for you.","مبروك! مبسوط علشانكم جدًا."],["When's the big day?","اليوم الكبير إمتى؟"],["How did you two meet?","اتعرفتوا على بعض إزاي؟"],["Wishing you a lifetime of happiness.","ربنا يسعدكم طول العمر."],["What a beautiful ceremony!","حفلة تحفة!"],["I wouldn't miss it.","مستحيل أفوتها."]],
+dlg:{title:"Talking about a wedding",you:"a guest",them:"the groom's brother",lines:[["t","Thanks for coming! Are you enjoying the wedding?"],["y","Very much. Congratulations to your brother!"],["t","Thank you. How do you know the couple?"],["y","I work with the bride. We're on the same team."],["t","Oh, nice. Have you tried the food?"],["y","Not yet. The venue is beautiful, by the way."],["t","Thanks. We chose it because of the Nile view."],["y","It's perfect. Please tell them I wish them a lifetime of happiness."]]},
+pron:["Congratulations! I'm so happy for you.","The reception starts at eight o'clock.","They're tying the knot next month.","Wishing you a lifetime of happiness."],
+ch:["Describe a wedding you went to.","How are weddings in Egypt changing? Compare old and new traditions."]},
+
+{id:"neighbours",field:"Social",title:"Neighbours & community",ar:"الجيران والمنطقة",
+v:[["neighbour","جار",1,"My neighbour is very helpful."],["building","عمارة",1,"We live in a big building."],["noisy","دوشة",1,"The street is noisy at night."],["quiet","هادي",1,"It's a quiet area."],["borrow","يستلف",1,"Can I borrow a ladder?"],["lend","يسلّف",2,"I lent him my drill."],["complain","يشتكي",2,"Someone complained about the noise."],["doorman","البواب",2,"The doorman keeps the keys."],["shared","مشترك",2,"The parking is shared."],["community","مجتمع",3,"There's a strong sense of community."],["get along with","يتعامل كويس مع",3,"We get along with all our neighbours."],["volunteer","يتطوع",3,"I volunteer at the local school."]],
+ph:[["Hi, I'm your new neighbour.","أهلًا، أنا جارك الجديد."],["Sorry to bother you.","آسف على الإزعاج."],["Could you keep the noise down?","ممكن تقلل الدوشة شوية؟"],["Let me know if you need anything.","لو احتجت حاجة قولي."],["Could you water my plants while I'm away?","ممكن تسقي الزرع وأنا مسافر؟"],["Welcome to the building!","أهلًا بيك في العمارة!"]],
+dlg:{title:"Meeting a new neighbour",you:"a resident",them:"a new neighbour",lines:[["t","Hi! I just moved into flat 6. I'm Mariam."],["y","Hi Mariam, welcome to the building! I'm Ahmed, from flat 5."],["t","Nice to meet you. Is it a quiet building?"],["y","Mostly, yes. It's a bit noisy in the street at night, though."],["t","Good to know. Who do I talk to about parking?"],["y","The doorman, Am Sayed. He's very helpful."],["t","Thanks. Sorry, could I borrow a drill? Mine is still in a box."],["y","Of course. Let me know if you need anything else."]]},
+pron:["Hi, I'm your new neighbour from flat six.","Could you keep the noise down, please?","There's a strong sense of community here.","Let me know if you need anything."],
+ch:["Describe your neighbours and your building.","Your neighbour's music is too loud every night. What do you say?"]},
+
+{id:"gadgets",field:"Technology",title:"Phones & gadgets",ar:"الموبايلات والأجهزة",
+v:[["phone","موبايل",1,"My phone is new."],["charger","شاحن",1,"Can I borrow your charger?"],["battery","بطارية",1,"My battery is low."],["screen","شاشة",1,"The screen is cracked."],["app","أبلكيشن",1,"Download the app."],["storage","مساحة",2,"I've run out of storage."],["upgrade","يرقّي / يجدد",2,"I want to upgrade my phone."],["frozen","هانج",2,"The screen is frozen."],["wireless","لاسلكي",2,"I use wireless earphones."],["factory reset","فورمات",3,"Try a factory reset."],["compatible","متوافق",3,"Is it compatible with iPhone?"],["glitch","عطل بسيط",3,"There's a glitch in the app."]],
+ph:[["My phone keeps restarting.","الموبايل بيعمل ريستارت لوحده."],["It won't turn on.","مش راضي يفتح."],["Have you tried turning it off and on again?","جربت تقفله وتفتحه؟"],["How long does the battery last?","البطارية بتقعد قد إيه؟"],["Is it still under warranty?","لسه في الضمان؟"],["Can you back up my photos?","ممكن تاخد نسخة من صوري؟"]],
+dlg:{title:"At a phone repair shop",you:"a customer",them:"a technician",lines:[["t","Hi, what seems to be the problem?"],["y","My phone keeps freezing, and the battery dies very quickly."],["t","How old is the phone?"],["y","About three years. Is it worth fixing?"],["t","A new battery will help a lot. It costs about eight hundred pounds."],["y","OK. Will I lose my photos?"],["t","No, but I'd back them up first, just in case."],["y","Good idea. How long will it take?"]]},
+pron:["My phone keeps freezing every day.","I've run out of storage again.","Is it still under warranty?","Try a factory reset if nothing works."],
+ch:["Describe the gadget you use most and why.","Do we depend too much on our phones? Give your opinion with examples."]}
+);
+
+</script>
+<script>
+/* ================= constants ================= */
+const LEVELS=["A1","A2","B1","B2","C1","C2"];
+const LNAME={A1:"Beginner",A2:"Elementary",B1:"Intermediate",B2:"Upper-intermediate",C1:"Advanced",C2:"Proficient"};
+const LAR={A1:"مبتدئ",A2:"أساسي",B1:"متوسط",B2:"فوق المتوسط",C1:"متقدم",C2:"متمكن"};
+const BAND={1:"Basic",2:"Intermediate",3:"Advanced"};
+const KEY="fluent-helper-v2";
+const PT_QUESTIONS=6;
+const PT_FIRST="Hi, nice to meet you! Let's just chat for a few minutes. Can you tell me a little about yourself — what do you do, and what does a normal day look like for you?";
+const PAIRS=[
+  {s:"/p/ vs /b/",w:["pen","Ben","park","bark","pill","bill"],ar:"العربي مافيهوش P — اقفل شفايفك وطلّع هوا من غير صوت."},
+  {s:"/v/ vs /f/",w:["very","ferry","van","fan","vine","fine"],ar:"في V سنانك على شفتك اللي تحت والصوت شغال (زي ڤ)."},
+  {s:"/θ/ vs /s/",w:["think","sink","thank","sank","mouth","mouse"],ar:"TH: طرف لسانك بين سنانك، ومتقولهاش س أو ت."},
+  {s:"/ð/ vs /d/",w:["they","day","then","den","those","dose"],ar:"TH في they زي ذ مش د."},
+  {s:"/ɪ/ vs /iː/",w:["ship","sheep","live","leave","fill","feel"],ar:"ship قصيرة، sheep طويلة — فرق المدة مهم."},
+  {s:"/ʃ/ vs /tʃ/",w:["ship","chip","share","chair","wash","watch"],ar:"SH زي ش، و CH زي تش."}
+];
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const TBY=Object.fromEntries(TOPICS.map(t=>[t.id,t]));
+const I={
+  play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+  slow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 13V9M9 2h6"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  stop:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>',
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>',
+  flame:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s5 4.5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 1-3.5S9 11 11 11c0-4 1-9 1-9z"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>'
+};
+
+/* ================= state ================= */
+function fmt(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function today(){return fmt(new Date())}
+function shift(key,n){const [y,m,d]=key.split("-").map(Number);return fmt(new Date(y,m-1,d+n))}
+function defState(){return{level:null,placement:null,streak:0,lastDone:null,days:{},plan:{},words:{},autoSpeak:true}}
+let S=defState();
+try{const raw=localStorage.getItem(KEY);if(raw)S=Object.assign(defState(),JSON.parse(raw))}catch(e){}
+function D(){const k=today();if(!S.days[k])S.days[k]={vocab:false,dlg:false,pron:[],challenge:null,complete:false};const d=S.days[k];d.pron=d.pron||[];return d}
+
+let view="today";
+let sample=null,sampleState="pending";
+let docRef=null,writing=false,dirty=false,saveTimer=null;
+const drafts={};
+let P=null;   /* AI placement */
+let Q=null;   /* quick placement */
+let FC=null;  /* flashcards */
+let G=null;   /* scripted dialogue */
+let T={msgs:[],busy:false,err:""}; /* AI free chat */
+let talkMode="dialogue";
+let pronTopic=null;
+const PR={res:{},tips:{},tipBusy:{},tipErr:{},self:{}};
+let openTopic=null;
+const ui={chBusy:false,chErr:""};
+let micBlocked=false,rec=null,recTarget=null;
+
+/* ================= own API key (GitHub version) ================= */
+const API={key:"",model:"claude-sonnet-5-5",quick:"claude-haiku-5-5",status:""};
+try{API.key=localStorage.getItem("fh-api-key")||"";API.model=localStorage.getItem("fh-api-model")||API.model;API.quick=localStorage.getItem("fh-api-quick")||API.quick}catch(e){}
+function parseJSONLoose(text){
+  try{return JSON.parse(text)}catch(e){}
+  const f=text.match(/```(?:json)?\s*([\s\S]*?)```/);if(f){try{return JSON.parse(f[1])}catch(e){}}
+  const a=Math.min(...["{","["].map(c=>{const i=text.indexOf(c);return i<0?Infinity:i}));
+  const b=Math.max(text.lastIndexOf("}"),text.lastIndexOf("]"));
+  if(a<Infinity&&b>a){try{return JSON.parse(text.slice(a,b+1))}catch(e){}}
+  throw{code:"invalid_json",text};
+}
+async function apiJson(input,opts){
+  const model=(opts&&opts.modelTier==="quick")?API.quick:API.model;
+  const messages=typeof input==="string"?[{role:"user",content:input+"\n\nReply with the JSON only."}]:input;
+  let r;
+  try{
+    r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":API.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model,max_tokens:1500,messages})});
+  }catch(e){throw{code:"network"}}
+  if(!r.ok){
+    let msg="";try{msg=(await r.json()).error.message||""}catch(e){}
+    if(r.status===401||r.status===403)throw{code:"bad_key"};
+    if(r.status===429)throw{code:"rate_limited"};
+    if(r.status===404||/model/i.test(msg))throw{code:"bad_model",message:msg};
+    if(r.status===400&&/credit|balance|billing/i.test(msg))throw{code:"no_credit"};
+    throw{code:"upstream_error",message:msg};
+  }
+  const d=await r.json();
+  const text=(d.content||[]).filter(c=>c.type==="text").map(c=>c.text).join("");
+  return parseJSONLoose(text);
+}
+const apiSample={json:apiJson};
+function useApiIfSet(){if(API.key){sample=apiSample;sampleState="ready"}else{sample=null;sampleState="none"}}
+
+/* ================= persistence ================= */
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  if(!docRef)return;
+  clearTimeout(saveTimer);saveTimer=setTimeout(flush,700);
+}
+async function flush(){
+  if(writing){dirty=true;return}
+  writing=true;
+  try{await docRef.set({json:JSON.stringify(S),updated:Date.now()})}catch(e){}
+  writing=false;
+  if(dirty){dirty=false;flush()}
+}
+async function initRuntime(){
+  if(!window.claude||!window.claude.use){useApiIfSet();render();return}
+  window.claude.use("sample").then(s=>{sample=s;sampleState=s?"ready":"none";render()}).catch(()=>{sampleState="none";render()});
+  try{
+    const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
+    if(!db||!user)return;
+    const id=await user.id();if(!id)return;
+    docRef=db.collection("data/users/"+id).doc("progress");
+    const snap=await docRef.get();
+    if(snap.exists){
+      const d=snap.data();
+      if(d&&d.json){S=Object.assign(defState(),JSON.parse(d.json));try{localStorage.setItem(KEY,d.json)}catch(e){}render()}
+    }else if(S.level){flush()}
+  }catch(e){docRef=null}
+}
+
+/* ================= helpers ================= */
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const aiOn=()=>sampleState==="ready";
+function errMsg(e){
+  switch(e&&e.code){
+    case "none":return window.claude?"AI feedback works when this page is open inside Claude.":"Turn on AI by adding your API key in Progress → AI coach.";
+    case "bad_key":return "Your API key was rejected. Check it in Progress → AI coach.";
+    case "bad_model":return "That model isn't available on your API account. Change the model name in Progress → AI coach.";
+    case "no_credit":return "Your API account has no credit left. Add credit in the Claude Console.";
+    case "network":return "No internet connection, or the request was blocked. Try again.";
+    case "not_granted":return "Claude isn't allowed for this page yet. Tap again and choose Allow.";
+    case "rate_limited":return "Too many requests right now. Wait a minute, then try again.";
+    case "session_expired":return "Your Claude session expired. Sign in again, then retry.";
+    case "invalid_json":return "The answer came back garbled. Try again.";
+    case "refused":return "Claude couldn't answer that. Try rephrasing.";
+    default:return "Couldn't reach Claude. Try again.";
+  }
+}
+function ask(input,opts){if(!sample)return Promise.reject({code:"none"});return sample.json(input,opts||{})}
+function lvl(){return S.level||"B1"}
+function focusText(){return (S.placement&&S.placement.focus||[]).join("; ")||"general speaking fluency"}
+function hiLevel(){return LEVELS.indexOf(lvl())>=3}
+function bands(){return {A1:[1,2],A2:[1,2],B1:[1,2,3],B2:[2,3,1],C1:[3,2],C2:[3,2]}[lvl()]}
+function lessonWords(t){
+  const b=bands();
+  return t.v.map((w,i)=>({w,i})).filter(x=>b.includes(x.w[2])).sort((x,y)=>b.indexOf(x.w[2])-b.indexOf(y.w[2])).slice(0,8);
+}
+function wkey(tid,i){return tid+":"+i}
+function topicKnown(t){return t.v.filter((w,i)=>S.words[wkey(t.id,i)]==="known").length}
+
+/* today's topic: planned, else next in rotation */
+function todayTopic(){
+  const k=today();
+  if(S.plan[k]&&TBY[S.plan[k]])return TBY[S.plan[k]];
+  const used=Object.keys(S.plan).sort().map(d=>S.plan[d]);
+  const recent=used.slice(-TOPICS.length+1);
+  const next=TOPICS.find(t=>!recent.includes(t.id))||TOPICS[0];
+  S.plan[k]=next.id;save();
+  return next;
+}
+function setTodayTopic(id){
+  const k=today();if(S.plan[k]===id)return;
+  S.plan[k]=id;
+  const d=D();d.vocab=false;d.dlg=false;d.pron=[];d.challenge=null;
+  FC=null;G=null;pronTopic=null;save();
+}
+
+/* ================= speech ================= */
+let voice=null;
+function pickVoice(){const vs=speechSynthesis.getVoices();voice=vs.find(v=>/en-US/i.test(v.lang)&&/Google|Samantha|Natural|Aria|Jenny/i.test(v.name))||vs.find(v=>/en-US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null}
+if("speechSynthesis" in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+let ttsState="unknown"; /* unknown | ok | broken */
+function ttsFail(){if(ttsState==="ok"||ttsState==="broken")return;ttsState="broken";render()}
+function speak(text,rate){
+  if(!text)return;
+  if(!("speechSynthesis" in window)||typeof SpeechSynthesisUtterance==="undefined"){ttsFail();return}
+  const ss=window.speechSynthesis;
+  try{
+    if(ss.speaking||ss.pending)ss.cancel();
+    if(!voice)pickVoice();
+    const u=new SpeechSynthesisUtterance(text);u.lang="en-US";if(voice)u.voice=voice;u.rate=rate||0.95;
+    let started=false;
+    u.onstart=()=>{started=true;if(ttsState!=="ok"){ttsState="ok";render()}};
+    u.onerror=e=>{if(!started&&e.error!=="interrupted"&&e.error!=="canceled")ttsFail()};
+    if(ss.paused)ss.resume();
+    ss.speak(u);
+    if(ttsState!=="ok")setTimeout(()=>{if(!started)ttsFail()},3000);
+  }catch(e){ttsFail()}
+}
+function ttsNotice(){
+  if(ttsState!=="broken")return "";
+  return `<div class="notice" role="status"><b>Audio can't play in this window.</b><span>The Claude app's viewer doesn't support speech playback on this device. Open Fluent Helper from GitHub Pages in Chrome or Edge to hear words and sentences.</span><span class="ar">الصوت مش بيشتغل جوه أبلكيشن Claude على الجهاز ده. افتح نسخة GitHub في Chrome عشان تسمع.</span></div>`;
+}
+function canRec(){return !!SR&&!micBlocked}
+function startRec(target,onText,onDone){
+  stopRec();
+  let r;try{r=new SR()}catch(e){micBlocked=true;render();return}
+  r.lang="en-US";r.interimResults=true;r.continuous=false;r.maxAlternatives=1;
+  let finalText="";
+  r.onresult=e=>{let t="";for(const res of e.results)t+=res[0].transcript;finalText=t;onText(t)};
+  r.onerror=e=>{if(["not-allowed","service-not-allowed","audio-capture"].includes(e.error))micBlocked=true};
+  r.onend=()=>{rec=null;recTarget=null;onDone(finalText);render()};
+  rec=r;recTarget=target;
+  try{r.start()}catch(e){rec=null;recTarget=null;micBlocked=true}
+  render();
+}
+function stopRec(){if(rec){try{rec.stop()}catch(e){}}}
+function micBtn(target){
+  if(!canRec())return "";
+  const on=recTarget===target;
+  return `<button class="ibtn ${on?"rec":""}" data-act="mic" data-target="${target}" aria-label="${on?"Stop recording":"Speak your answer"}">${on?I.stop:I.mic}</button>`;
+}
+function micNotice(){
+  if(canRec())return "";
+  return `<div class="notice"><b>Speak with your keyboard's microphone.</b><span>Tap a text box, then tap the mic key on your phone keyboard and talk. It types what you say, and Claude corrects it like normal.</span><span class="ar">دوس على مربع الكتابة، وبعدين على أيقونة المايك في كيبورد الموبايل واتكلم — هيكتب كلامك وClaude يصححه.</span></div>`;
+}
+function sayBtn(text,cls){return `<button class="ibtn ${cls||""}" data-act="say" data-text="${esc(text)}" aria-label="Listen">${I.play}</button>`}
+
+/* ================= day completion ================= */
+function stepsDone(d){return{vocab:!!d.vocab,dlg:!!d.dlg,pron:d.pron.length>=3,challenge:!!d.challenge}}
+function checkComplete(){
+  const d=D();const s=stepsDone(d);
+  if(!d.complete&&s.vocab&&s.dlg&&s.pron&&s.challenge){
+    d.complete=true;const k=today();
+    if(S.lastDone===shift(k,-1))S.streak=(S.streak||0)+1;else if(S.lastDone!==k)S.streak=1;
+    S.lastDone=k;
+  }
+}
+function liveStreak(){const k=today();return (S.lastDone===k||S.lastDone===shift(k,-1))?S.streak:0}
+
+/* ================= placement: quick (offline) ================= */
+function startQuick(){stopRec();Q={i:0,ans:[],result:null};P=null;view="test";render();window.scrollTo(0,0)}
+function answerQuick(k){
+  Q.ans.push(k);Q.i++;
+  if(Q.i>=PLACEMENT.length){
+    const by={};LEVELS.forEach(l=>by[l]=0);
+    PLACEMENT.forEach((q,i)=>{if(Q.ans[i]===q.a)by[q.l]++});
+    const correct=PLACEMENT.filter((q,i)=>Q.ans[i]===q.a).length;
+    /* total-score bands: 0-4 A1, 5-7 A2, 8-10 B1, 11-13 B2, 14-16 C1, 17-18 C2 */
+    const level=correct>=17?"C2":correct>=14?"C1":correct>=11?"B2":correct>=8?"B1":correct>=5?"A2":"A1";
+    S.level=level;
+    S.placement={mode:"quick",level,date:today(),correct,total:PLACEMENT.length,by,scores:null,focus:[],strengths:[],corrections:[],summary_ar:""};
+    save();Q.result=S.placement;
+  }
+  render();window.scrollTo(0,0);
+}
+
+/* ================= placement: AI interview ================= */
+function startPlacement(){stopRec();P={turns:[],q:PT_FIRST,busy:false,err:"",result:null};Q=null;drafts["pt"]="";view="test";render();window.scrollTo(0,0)}
+async function sendPlacement(){
+  const a=(drafts["pt"]||"").trim();
+  if(!a||P.busy)return;
+  stopRec();
+  P.turns.push({q:P.q,a});drafts["pt"]="";P.err="";
+  const transcript=P.turns.map((t,i)=>`Examiner Q${i+1}: ${t.q}\nLearner A${i+1}: ${t.a}`).join("\n\n");
+  P.busy=true;render();
+  if(P.turns.length<PT_QUESTIONS){
+    const n=P.turns.length+1;
+    try{
+      const r=await ask(`You are a friendly English speaking examiner running a short placement interview with an Arabic-speaking adult learner from Egypt. The goal is to find their CEFR speaking level.
+
+Interview so far:
+${transcript}
+
+Ask question ${n} of ${PT_QUESTIONS}. Adapt the difficulty: if their answers are short, simple or full of errors, ask simpler, concrete questions about daily life. If they answer fluently, move up: past experiences, opinions, comparisons, hypotheticals, and finally abstract topics. Don't repeat a topic. Don't give feedback. One or two natural spoken sentences.
+Reply with only JSON: {"question":"..."}`,{modelTier:"quick",cache:false});
+      P.q=String(r.question||"").trim()||"Can you tell me about a place you'd love to visit, and why?";
+    }catch(e){P.turns.pop();drafts["pt"]=a;P.err=errMsg(e)}
+    P.busy=false;render();return;
+  }
+  try{
+    const r=await ask(`You are an experienced CEFR speaking examiner. Below is a placement interview with an Arabic-speaking adult learner from Egypt. Answers were typed or dictated through speech-to-text, so ignore spelling, capitals and punctuation. Judge spoken grammar accuracy, vocabulary range, fluency (length and flow) and coherence. Be realistic, not generous.
+
+${transcript}
+
+Reply with only JSON:
+{"level":"one of A1, A2, B1, B2, C1, C2","scores":{"fluency":0,"grammar":0,"vocabulary":0,"coherence":0},"strengths":["2-3 short points"],"focus":["3 specific focus areas"],"corrections":[{"original":"something they actually wrote","better":"natural correct version","why_ar":"short reason in simple Arabic"}],"summary_ar":"2 sentences in simple Arabic: their level and what to work on"}
+Scores are 0-100. Up to 4 corrections, from their real answers.`,{cache:false});
+    const level=LEVELS.includes(String(r.level).toUpperCase())?String(r.level).toUpperCase():"B1";
+    S.level=level;
+    S.placement={mode:"ai",level,date:today(),scores:r.scores||{},strengths:r.strengths||[],focus:r.focus||[],corrections:r.corrections||[],summary_ar:r.summary_ar||""};
+    FC=null;save();P.result=S.placement;
+  }catch(e){P.turns.pop();drafts["pt"]=a;P.err=errMsg(e)}
+  P.busy=false;render();
+}
+
+/* ================= flashcards ================= */
+function startFlash(){
+  const t=todayTopic();
+  FC={tid:t.id,queue:lessonWords(t).map(x=>x.i),reveal:false,seen:0};
+}
+function flashAnswer(ok){
+  const i=FC.queue.shift();
+  S.words[wkey(FC.tid,i)]=ok?"known":"learning";
+  if(!ok)FC.queue.push(i);
+  FC.reveal=false;FC.seen++;
+  if(!FC.queue.length){D().vocab=true;checkComplete()}
+  save();render();
+}
+
+/* ================= scripted dialogue ================= */
+function startDialogue(tid){
+  const t=TBY[tid];
+  G={tid,pos:0,ans:{},fb:{},ai:{},done:false,showModel:false};
+  advance(false);
+}
+function advance(sayIt){
+  const lines=TBY[G.tid].dlg.lines;
+  let said=[];
+  while(G.pos<lines.length&&lines[G.pos][0]==="t"){said.push(lines[G.pos][1]);G.pos++}
+  if(G.pos>=lines.length){G.done=true;if(G.tid===todayTopic().id){D().dlg=true;checkComplete();save()}}
+  if(sayIt&&said.length&&S.autoSpeak)speak(said.join(" "));
+}
+function contentWords(s){const stop=new Set("the a an to of and or in on at for is are am i you it this that be with my your we they he she was were do does did have has had can could would will not no yes".split(" "));return norm(s).filter(w=>w.length>2&&!stop.has(w))}
+function similarity(a,b){const A=new Set(contentWords(a)),B=new Set(contentWords(b));if(!B.size)return 1;let n=0;B.forEach(w=>{if(A.has(w))n++});return n/B.size}
+async function sendDialogue(){
+  const k="dlg";const text=(drafts[k]||"").trim();if(!text||!G||G.done)return;
+  stopRec();
+  const lines=TBY[G.tid].dlg.lines;const idx=G.pos;
+  G.ans[idx]=text;G.fb[idx]=similarity(text,lines[idx][1]);drafts[k]="";G.showModel=false;
+  G.pos++;advance(true);render();scrollEnd();
+  if(aiOn()){
+    G.ai[idx]={busy:true};render();
+    const t=TBY[G.tid];
+    const ctx=lines.slice(0,idx).map((l,j)=>(l[0]==="t"?"Other person: "+l[1]:"Learner: "+(G.ans[j]||l[1]))).join("\n");
+    try{
+      const r=await ask(`An Arabic-speaking learner (CEFR ${lvl()}) is practising a role-play: "${t.dlg.title}". They play ${t.dlg.you}; the other person is ${t.dlg.them}.
+Conversation so far:
+${ctx}
+Learner's reply: "${text}"
+Check ONLY the learner's reply for real mistakes in grammar, word choice or unnatural phrasing (ignore punctuation and capitals; it may be speech-to-text). Also say if the reply makes sense in the conversation.
+Reply with only JSON: {"correction":null or {"better":"corrected natural version","why_ar":"one short reason in simple Arabic"}}`,{modelTier:"quick",cache:false});
+      G.ai[idx]={fix:r.correction&&r.correction.better?r.correction:null};
+    }catch(e){G.ai[idx]={err:errMsg(e)}}
+    render();
+  }
+}
+function scrollEnd(){requestAnimationFrame(()=>{const el=document.getElementById("talk-end");if(el)el.scrollIntoView({block:"end",behavior:"smooth"})})}
+
+/* ================= AI free chat ================= */
+function ensureOpener(){if(!T.msgs.length){const t=todayTopic();T.msgs.push({role:"ai",text:t.dlg.lines[0][1]})}}
+async function sendTalk(){
+  const text=(drafts["talk"]||"").trim();
+  if(!text||T.busy)return;
+  stopRec();
+  drafts["talk"]="";T.err="";
+  const me={role:"me",text,fix:undefined};T.msgs.push(me);T.busy=true;render();scrollEnd();
+  const t=todayTopic();
+  const hist=T.msgs.slice(-14).map(m=>(m.role==="ai"?"Tutor: ":"Learner: ")+m.text).join("\n");
+  try{
+    const r=await ask(`You are an English conversation partner and tutor for an Arabic-speaking learner from Egypt at CEFR level ${lvl()}.
+Topic: "${t.title}". Role-play: you are ${t.dlg.them}, the learner is ${t.dlg.you}. Try to bring in some of these words naturally: ${t.v.map(w=>w[0]).join(", ")}.
+Conversation so far:
+${hist}
+
+1. Check ONLY the learner's last message for real mistakes in grammar, word choice or unnatural phrasing. Ignore punctuation and capitals. If it's fine, correction is null.
+2. Write your next line: 1-3 short natural sentences at ${lvl()} level, ending with a question.
+
+Reply with only JSON:
+{"correction":null or {"better":"corrected natural version of the learner's last message","why_ar":"one short reason in simple Arabic"},"reply":"your next line"}`,{modelTier:"quick",cache:false});
+    me.fix=r.correction&&r.correction.better?r.correction:null;
+    const reply=String(r.reply||"").trim();
+    if(reply){T.msgs.push({role:"ai",text:reply});if(S.autoSpeak)speak(reply)}
+  }catch(e){T.msgs.pop();drafts["talk"]=text;T.err=errMsg(e)}
+  T.busy=false;render();scrollEnd();
+}
+
+/* ================= challenge ================= */
+function challengeText(t){return t.ch[hiLevel()?1:0]}
+function usedWords(t,text){const low=" "+norm(text).join(" ")+" ";return t.v.filter(w=>low.includes(" "+norm(w[0]).join(" ")+" ")).map(w=>w[0])}
+async function sendChallenge(){
+  const t=todayTopic();const a=(drafts["ch"]||"").trim();
+  if(!a||ui.chBusy)return;
+  stopRec();
+  const used=usedWords(t,a);
+  if(!aiOn()){D().challenge={answer:a,used,mode:"self"};checkComplete();save();render();return}
+  ui.chBusy=true;ui.chErr="";render();
+  try{
+    const r=await ask(`You are an encouraging English speaking coach for an Arabic-speaking learner from Egypt at CEFR level ${lvl()}.
+Speaking task: "${challengeText(t)}"
+Learner's answer (may be speech-to-text; ignore punctuation): "${a}"
+Reply with only JSON:
+{"score":1-10,"corrected":"their answer rewritten correctly and naturally, same meaning","feedback_ar":"2-3 sentences in simple Arabic: what was good and the main thing to fix","upgrades":["2-3 better phrases they could use next time"]}`,{cache:false});
+    D().challenge={answer:a,used,mode:"ai",score:Number(r.score)||0,corrected:String(r.corrected||""),feedback_ar:String(r.feedback_ar||""),upgrades:Array.isArray(r.upgrades)?r.upgrades:[]};
+    checkComplete();save();
+  }catch(e){ui.chErr=errMsg(e)}
+  ui.chBusy=false;render();
+}
+
+/* ================= pronunciation ================= */
+function curPronTopic(){return TBY[pronTopic]||todayTopic()}
+function norm(s){return String(s).toLowerCase().replace(/[’']/g,"'").replace(/[^a-z0-9' ]+/g," ").split(/\s+/).filter(Boolean)}
+function compare(target,heard){
+  const a=norm(target),b=norm(heard);
+  const dp=Array.from({length:a.length+1},()=>new Array(b.length+1).fill(0));
+  for(let i=a.length-1;i>=0;i--)for(let j=b.length-1;j>=0;j--)dp[i][j]=a[i]===b[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+  const ok=new Array(a.length).fill(false);let i=0,j=0;
+  while(i<a.length&&j<b.length){if(a[i]===b[j]){ok[i]=true;i++;j++}else if(dp[i+1][j]>=dp[i][j+1])i++;else j++}
+  const out=[];let k=0;
+  for(const w of target.split(/\s+/)){const n=norm(w);if(!n.length){out.push({w,ok:true});continue}out.push({w,ok:n.every((_,q)=>ok[k+q])});k+=n.length}
+  return{words:out,score:a.length?Math.round(ok.filter(Boolean).length/a.length*100):0};
+}
+function markPron(key){const d=D();if(!d.pron.includes(key)){d.pron.push(key);checkComplete();save()}}
+async function getTips(key,s){
+  if(PR.tipBusy[key])return;
+  PR.tipBusy[key]=true;PR.tipErr[key]="";render();
+  const res=PR.res[key];const missed=res?res.words.filter(w=>!w.ok).map(w=>w.w).join(", "):"";
+  try{
+    const r=await ask(`Give pronunciation coaching for an Arabic-speaking (Egyptian) learner for this sentence: "${s}"
+${missed?`The speech recognizer did not catch these words when they said it: ${missed}. Focus on them.`:""}
+Reply with only JSON:
+{"ipa":"IPA for the whole sentence, General American","stress":"the sentence with STRESSED syllables in capitals","watch":[{"word":"a word from the sentence","tip_ar":"short tip in simple Arabic about the sound Arabic speakers usually get wrong"}]}
+2-4 items in watch.`,{modelTier:"quick"});
+    PR.tips[key]=r;
+  }catch(e){PR.tipErr[key]=errMsg(e)}
+  PR.tipBusy[key]=false;render();
+}
+
+/* ================= views ================= */
+function renderMeta(){
+  const L=S.level;const idx=LEVELS.indexOf(L);
+  document.getElementById("meta").innerHTML=
+    `<div class="scale" aria-label="CEFR level ${L||"not set"}">${LEVELS.map((x,i)=>`<i class="${i===idx?"on":i<idx?"past":""}">${x}</i>`).join("")}</div>
+     <div class="streak" title="Day streak">${I.flame}${liveStreak()}</div>`;
+  document.querySelectorAll(".tab").forEach(b=>{if(b.dataset.tab===view)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+}
+function dateLabel(){return new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}
+
+function vWelcome(){
+  return `<section class="hero">
+    <p class="eyebrow">Start here · ابدأ هنا</p>
+    <h1>Find your level, then speak a little English every day.</h1>
+    <p class="muted">${TOPICS.length} topics across work, travel, money, health and everyday life — each with vocabulary, a real conversation, pronunciation and a speaking task.</p>
+    <p class="ar muted">حدد مستواك الأول، وبعدها كل يوم موضوع جديد: كلمات، محادثة، نطق، وتحدي كلام.</p>
+  </section>
+  <div class="card">
+    <h2>Placement test</h2>
+    ${aiOn()?`<p class="muted">Choose how you want to be tested.</p>
+      <div class="row"><button class="btn" data-act="pt-start">Conversation interview (AI) ${I.send}</button><button class="btn ghost" data-act="q-start">Quick test · 18 questions</button></div>
+      <p class="muted small">The interview judges how you actually speak. The quick test uses listening and conversation questions and works offline.</p>`
+    :`<p class="muted">18 conversation and listening questions, from easy to hard. About 5 minutes.</p>
+      <div class="row"><button class="btn" data-act="q-start">Start the test ${I.send}</button></div>`}
+    <details><summary class="muted" style="cursor:pointer">I already know my level</summary>
+      <div class="row" style="margin-top:10px">${LEVELS.map(l=>`<button class="chip" data-act="set-level" data-l="${l}">${l} · ${LNAME[l]}</button>`).join("")}</div>
+    </details>
+  </div>
+  <div class="feat">
+    <div><b>Vocabulary</b><small>Flashcards matched to your level, with Arabic meanings</small></div>
+    <div><b>Conversation</b><small>Real dialogues — you say your part, then compare</small></div>
+    <div><b>Pronunciation</b><small>Say it into the mic and see which words came through</small></div>
+    <div><b>Streak</b><small>Finish all four steps to keep your streak going</small></div>
+  </div>`;
+}
+
+function vTest(){
+  if(Q){
+    if(Q.result)return vResult(Q.result,true);
+    const q=PLACEMENT[Q.i];
+    return `<section class="hero"><p class="eyebrow">Quick test · Question ${Q.i+1} of ${PLACEMENT.length}</p>
+      <div class="progress"><i style="width:${Q.i/PLACEMENT.length*100}%"></i></div></section>
+      <div class="card">
+        ${q.listen?`<div class="row"><button class="btn ghost" data-act="say" data-text="${esc(q.listen)}">${I.play} Play</button><button class="btn line sm" data-act="say-slow" data-text="${esc(q.listen)}">${I.slow} Slow</button></div>`:""}
+        <h2>${esc(q.q)}</h2>
+        <div class="opts">${q.o.map((o,k)=>`<button class="opt" data-act="q-ans" data-k="${k}">${esc(o)}</button>`).join("")}</div>
+      </div>
+      <div class="row"><button class="btn line sm" data-act="test-cancel">Leave the test</button></div>`;
+  }
+  if(P.result)return vResult(P.result,true);
+  const n=P.turns.length+1;
+  return `<section class="hero">
+    <p class="eyebrow">Interview · Question ${n} of ${PT_QUESTIONS}</p>
+    <div class="progress"><i style="width:${(P.turns.length/PT_QUESTIONS)*100}%"></i></div>
+  </section>
+  <div class="chat">
+    ${P.turns.map(t=>`<div class="msg ai"><div class="bubble">${esc(t.q)}</div></div><div class="msg me"><div class="bubble">${esc(t.a)}</div></div>`).join("")}
+    ${P.busy?`<div class="msg ai"><div class="typing"><span class="spin"></span> ${P.turns.length>=PT_QUESTIONS?"Scoring your interview… this can take up to a minute":"Thinking of the next question…"}</div></div>`:
+    `<div class="msg ai"><div class="bubble">${esc(P.q)}</div><div class="row">${sayBtn(P.q)}</div></div>`}
+  </div>
+  ${P.busy?"":`<div class="card compose">
+    <label for="pt" class="eyebrow">Your answer</label>
+    <textarea id="pt" data-draft="pt" placeholder="Type or speak your answer…">${esc(drafts["pt"]||"")}</textarea>
+    <div class="spread"><div class="row">${micBtn("pt")}</div><button class="btn" data-act="pt-send">${P.turns.length===PT_QUESTIONS-1?"Finish test":"Send answer"} ${I.send}</button></div>
+    <p class="ar muted small">جاوب زي ما بتتكلم. الأخطاء عادي — بتساعدنا نحدد مستواك.</p>
+  </div>`}
+  ${P.err?`<p class="err">${esc(P.err)}</p>`:""}
+  ${micNotice()}
+  <div class="row"><button class="btn line sm" data-act="test-cancel">Leave the test</button></div>`;
+}
+function scoreBars(sc){
+  return ["fluency","grammar","vocabulary","coherence"].map(k=>{const v=Math.max(0,Math.min(100,Number(sc[k])||0));return `<div class="score-row"><span>${k[0].toUpperCase()+k.slice(1)}</span><div class="bar"><i style="width:${v}%"></i></div><span>${v}</span></div>`}).join("");
+}
+function vResult(r,fresh){
+  const quick=r.mode==="quick";
+  return `<section class="hero">
+    <p class="eyebrow">${fresh?"Your result":"Placement · "+esc(r.date||"")}${quick?" · quick test":""}</p>
+    <div class="row" style="gap:16px;align-items:flex-end"><span class="big-level">${esc(r.level)}</span><div><h2>${LNAME[r.level]||""}</h2><p class="ar muted">${LAR[r.level]||""}</p></div></div>
+    ${r.summary_ar?`<p class="ar">${esc(r.summary_ar)}</p>`:""}
+  </section>
+  ${quick?`<div class="card"><h2>${r.correct} of ${r.total} correct</h2>${LEVELS.map(l=>`<div class="score-row"><span>${l}</span><div class="bar"><i style="width:${(r.by[l]||0)/3*100}%"></i></div><span>${r.by[l]||0}/3</span></div>`).join("")}
+    <p class="muted small">Questions get harder from A1 to C2; your level comes from your total score. ${aiOn()?"For a speaking-based result, take the conversation interview from Progress.":""}</p></div>`
+  :`<div class="card"><h2>Scores</h2>${scoreBars(r.scores||{})}</div>`}
+  ${(r.strengths||[]).length?`<div class="card"><h2>What you do well</h2><ul class="plain">${r.strengths.map(s=>`<li>${esc(s)}</li>`).join("")}</ul></div>`:""}
+  ${(r.focus||[]).length?`<div class="card"><h2>Your focus areas</h2><ul class="plain">${r.focus.map(s=>`<li>${esc(s)}</li>`).join("")}</ul></div>`:""}
+  ${(r.corrections||[]).length?`<div class="card"><h2>From your answers</h2>${r.corrections.map(c=>`<div class="fix"><span class="lbl">You said</span><span>${esc(c.original)}</span><span class="lbl">Better</span><b>${esc(c.better)}</b>${c.why_ar?`<span class="ar">${esc(c.why_ar)}</span>`:""}</div>`).join("")}</div>`:""}
+  ${fresh?`<div class="row"><button class="btn" data-act="go-today">Start today's lesson ${I.send}</button></div>`:""}`;
+}
+
+function vToday(){
+  if(!S.level)return vWelcome();
+  const t=todayTopic();const d=D();const s=stepsDone(d);
+  const doneN=Object.values(s).filter(Boolean).length;
+  const step=(ok,title,sub,btn)=>`<li class="step"><span class="tick ${ok?"done":""}">${ok?I.check:""}</span><span><b>${title}</b><small>${sub}</small></span>${btn||""}</li>`;
+  if(!FC||FC.tid!==t.id)startFlash();
+  const ch=d.challenge;
+  const lw=lessonWords(t);
+  return `<section class="hero">
+    <p class="eyebrow">${esc(dateLabel())} · ${esc(t.field)} · Level ${S.level}</p>
+    <h1>${esc(t.title)}</h1>
+    <p class="ar muted">${esc(t.ar)}</p>
+    <div class="row"><button class="btn line sm" data-tab="topics">Pick a different topic</button></div>
+  </section>
+  <div class="card">
+    <div class="spread"><h2>Today's steps</h2>${d.complete?`<span class="pill good">Day complete</span>`:`<span class="pill mid">${doneN} of 4</span>`}</div>
+    <ul class="steps">
+      ${step(s.vocab,"Vocabulary",`${lw.length} words for your level`,`<a class="btn sm ghost" href="#vocab">Go</a>`)}
+      ${step(s.dlg,"Conversation",esc(t.dlg.title),`<button class="btn sm ghost" data-act="go-dialogue">Go</button>`)}
+      ${step(s.pron,"Pronunciation","Practise 3 sentences · "+Math.min(d.pron.length,3)+"/3",`<button class="btn sm ghost" data-act="go-pron">Go</button>`)}
+      ${step(s.challenge,"Speaking challenge","Answer in 4–6 sentences",`<a class="btn sm ghost" href="#challenge">Go</a>`)}
+    </ul>
+  </div>
+  <div class="card" id="vocab">
+    <div class="spread"><h2>Vocabulary</h2>${d.vocab?`<span class="pill good">Done</span>`:`<span class="pill mid">${FC.queue.length} left</span>`}</div>
+    ${FC.queue.length?(()=>{const w=t.v[FC.queue[0]];return `<div class="flash">
+        <span class="band b${w[2]}">${BAND[w[2]]}</span>
+        <span class="word">${esc(w[0])}</span>
+        <div class="row">${sayBtn(w[0])}<button class="ibtn" data-act="say-slow" data-text="${esc(w[0])}" aria-label="Listen slowly">${I.slow}</button></div>
+        ${FC.reveal?`<span class="ar" style="text-align:center;font-size:18px">${esc(w[1])}</span><span class="ex">${esc(w[3])} <button class="ibtn xs" data-act="say" data-text="${esc(w[3])}" aria-label="Listen to example">${I.play}</button></span>
+          <div class="row"><button class="btn line" data-act="fc-again">Again</button><button class="btn" data-act="fc-ok">${I.check} I know it</button></div>`
+        :`<button class="btn ghost" data-act="fc-reveal">Show meaning</button><p class="muted small">Say the word out loud and guess the meaning first.</p>`}
+      </div>`})():`<p class="muted">All ${lw.length} words reviewed. Here they are again:</p>`}
+    <div class="vlist">${lw.map(({w})=>`<div class="vrow"><span>${sayBtn(w[0],"xs")}</span><span class="en">${esc(w[0])}</span><span class="ar">${esc(w[1])}</span></div>`).join("")}</div>
+  </div>
+  <div class="card">
+    <h2>Useful phrases</h2>
+    <div class="vlist">${t.ph.map(p=>`<div class="vrow"><span>${sayBtn(p[0],"xs")}</span><span class="en">${esc(p[0])}</span><span class="ar">${esc(p[1])}</span></div>`).join("")}</div>
+  </div>
+  <div class="card">
+    <h2>Conversation: ${esc(t.dlg.title)}</h2>
+    <p class="muted">You are ${esc(t.dlg.you)}. The other person is ${esc(t.dlg.them)}. Say your part out loud, then compare with a natural answer.</p>
+    <div class="row"><button class="btn" data-act="go-dialogue">${d.dlg?"Practise again":"Start the conversation"} ${I.send}</button></div>
+  </div>
+  <div class="card" id="challenge">
+    <h2>Speaking challenge</h2>
+    <p>${esc(challengeText(t))}</p>
+    <p class="muted small">Try to use 3 of today's words.</p>
+    ${ch?vChallengeResult(t,ch):`<div class="compose"><label for="ch" class="eyebrow">Your answer</label>
+      <textarea id="ch" data-draft="ch" placeholder="Speak or type 4–6 sentences…">${esc(drafts["ch"]||"")}</textarea>
+      <div class="spread"><div class="row">${micBtn("ch")}</div><button class="btn" data-act="ch-send" ${ui.chBusy?"disabled":""}>${ui.chBusy?'<span class="spin"></span> Checking…':aiOn()?"Get feedback":"Done"}</button></div>
+      ${ui.chErr?`<p class="err">${esc(ui.chErr)}</p>`:""}</div>`}
+  </div>
+  ${micNotice()}`;
+}
+function vChallengeResult(t,ch){
+  const used=ch.used||[];
+  const wc=norm(ch.answer).length;
+  let html=`<div class="fix blue"><span class="lbl">Your answer · ${wc} words</span><span>${esc(ch.answer)}</span>
+    <span class="lbl">Today's words you used · ${used.length}</span><span>${used.length?used.map(esc).join(", "):"None yet — try adding some next time."}</span></div>`;
+  if(ch.mode==="ai"){
+    html+=`<div class="fix blue"><span class="lbl">Score</span><b>${esc(ch.score)}/10</b>
+      <span class="lbl">Corrected</span><span>${esc(ch.corrected)}</span>
+      <span class="row"><button class="btn sm line" data-act="say" data-text="${esc(ch.corrected)}">${I.play} Listen</button></span>
+      ${ch.feedback_ar?`<span class="ar">${esc(ch.feedback_ar)}</span>`:""}
+      ${ch.upgrades&&ch.upgrades.length?`<span class="lbl">Try next time</span><ul class="plain">${ch.upgrades.map(u=>`<li>${esc(u)}</li>`).join("")}</ul>`:""}</div>`;
+  }else{
+    html+=`<div class="grid" style="display:grid;gap:6px"><span class="eyebrow">Check yourself</span>
+      <span class="small">${wc>=40?"✓":"○"} At least 40 words (${wc})</span>
+      <span class="small">${used.length>=3?"✓":"○"} Used 3 of today's words (${used.length})</span>
+      <span class="small muted">Now say it out loud once more without reading.</span></div>`;
+  }
+  return html+`<div class="row"><button class="btn sm line" data-act="ch-redo">Answer again</button></div>`;
+}
+
+function vTalk(){
+  const t=todayTopic();
+  if(talkMode==="free"&&aiOn()){
+    ensureOpener();
+    return `<section class="hero"><p class="eyebrow">Free chat with AI · ${esc(t.title)}</p><h1>Talk about anything</h1>
+      <p class="muted">Claude plays ${esc(t.dlg.them)}. Every message you send gets corrected.</p>
+      <div class="row"><button class="chip" data-act="tmode" data-m="dialogue" aria-pressed="false">Dialogues</button><button class="chip" data-act="tmode" data-m="free" aria-pressed="true">Free chat (AI)</button></div></section>
+      <div class="chat">
+      ${T.msgs.map(m=>m.role==="ai"?`<div class="msg ai"><div class="bubble">${esc(m.text)}</div><div class="row">${sayBtn(m.text,"xs")}</div></div>`:
+        `<div class="msg me"><div class="bubble">${esc(m.text)}</div>${m.fix?`<div class="fix"><span class="lbl">Better</span><b>${esc(m.fix.better)}</b>${m.fix.why_ar?`<span class="ar">${esc(m.fix.why_ar)}</span>`:""}</div>`:m.fix===null?`<span class="ok-note">Correct ✓</span>`:""}</div>`).join("")}
+      ${T.busy?`<div class="msg ai"><span class="typing"><span class="spin"></span> typing…</span></div>`:""}
+      <span id="talk-end"></span></div>
+      ${T.err?`<p class="err">${esc(T.err)}</p>`:""}
+      <div class="card compose"><label for="talk" class="eyebrow">Your reply</label>
+        <textarea id="talk" data-draft="talk" placeholder="Type or speak…" style="min-height:70px">${esc(drafts["talk"]||"")}</textarea>
+        <div class="spread"><div class="row">${micBtn("talk")}${autoSpeakToggle()}</div>
+        <div class="row"><button class="btn line sm" data-act="talk-reset">Restart</button><button class="btn" data-act="talk-send" ${T.busy?"disabled":""}>Send ${I.send}</button></div></div></div>
+      ${micNotice()}`;
+  }
+  if(!G)startDialogue(t.id);
+  const tp=TBY[G.tid];const lines=tp.dlg.lines;
+  let chat="";
+  for(let j=0;j<Math.min(G.pos,lines.length);j++){
+    const l=lines[j];
+    if(l[0]==="t")chat+=`<div class="msg ai"><div class="bubble">${esc(l[1])}</div><div class="row">${sayBtn(l[1],"xs")}</div></div>`;
+    else{
+      const a=G.ans[j];const sim=G.fb[j];const ai=G.ai[j]||{};
+      chat+=`<div class="msg me"><div class="bubble">${esc(a||"")}</div>
+        ${ai.busy?`<span class="typing">Checking…</span>`:ai.fix?`<div class="fix"><span class="lbl">Better</span><b>${esc(ai.fix.better)}</b>${ai.fix.why_ar?`<span class="ar">${esc(ai.fix.why_ar)}</span>`:""}</div>`:ai.fix===null?`<span class="ok-note">Correct ✓</span>`:""}
+        <div class="fix blue"><span class="lbl">A natural answer ${sim>=.6?"· close to yours":""}</span><span>${esc(l[1])}</span><span class="row">${sayBtn(l[1],"xs")}</span></div></div>`;
+    }
+  }
+  if(!G.done){
+    const l=lines[G.pos];
+    chat+=`<div class="msg ai"><span class="typing">Your turn…</span></div>`;
+  }
+  return `<section class="hero"><p class="eyebrow">Conversation · ${esc(tp.field)}</p><h1>${esc(tp.dlg.title)}</h1>
+    <p class="muted">You: ${esc(tp.dlg.you)} · Other person: ${esc(tp.dlg.them)}</p>
+    ${aiOn()?`<div class="row"><button class="chip" data-act="tmode" data-m="dialogue" aria-pressed="true">Dialogues</button><button class="chip" data-act="tmode" data-m="free" aria-pressed="false">Free chat (AI)</button></div>`:window.claude?"":`<div class="row"><button class="btn line sm" data-act="go-ai">Turn on AI chat & corrections</button></div>`}
+    <label for="dlg-topic" class="eyebrow">Topic</label>
+    <select id="dlg-topic" data-act="dlg-topic">${TOPICS.map(x=>`<option value="${x.id}" ${x.id===G.tid?"selected":""}>${esc(x.title)}${x.id===t.id?" (today)":""}</option>`).join("")}</select>
+  </section>
+  <div class="chat">${chat}<span id="talk-end"></span></div>
+  ${G.done?`<div class="card"><h2>Conversation complete</h2><p class="muted">Now try the whole thing again, faster, without looking at the natural answers.</p>
+      <div class="row"><button class="btn" data-act="dlg-restart">Practise again</button><button class="btn ghost" data-act="go-pron">Go to pronunciation</button></div></div>`
+  :`<div class="card compose"><label for="dlg" class="eyebrow">Your reply</label>
+      <textarea id="dlg" data-draft="dlg" placeholder="Say or type your answer…" style="min-height:70px">${esc(drafts["dlg"]||"")}</textarea>
+      ${G.showModel?`<div class="fix blue"><span class="lbl">Example</span><span>${esc(lines[G.pos][1])}</span></div>`:""}
+      <div class="spread"><div class="row">${micBtn("dlg")}<button class="btn line sm" data-act="dlg-hint">${G.showModel?"Hide example":"Show an example"}</button></div>
+      <div class="row"><button class="btn line sm" data-act="dlg-restart">Restart</button><button class="btn" data-act="dlg-send">Send ${I.send}</button></div></div>
+      <div class="row">${autoSpeakToggle()}</div></div>`}
+  ${micNotice()}`;
+}
+function autoSpeakToggle(){return `<label class="row muted small" style="gap:6px"><input type="checkbox" id="autospeak" data-act="autospeak" ${S.autoSpeak?"checked":""}> Read replies aloud</label>`}
+
+function vPron(){
+  const t=curPronTopic();const d=D();
+  const isToday=t.id===todayTopic().id;
+  return `<section class="hero">
+    <p class="eyebrow">Pronunciation · ${Math.min(d.pron.length,3)}/3 today</p>
+    <h1>Listen, say it, compare.</h1>
+    <p class="muted">${canRec()?"Play the sentence, then tap Say it. Words the mic didn't catch turn red — say those again slowly.":"Play the sentence, then say it into your keyboard's mic and tap Check. Words that didn't come through turn red."}</p>
+    <label for="pron-topic" class="eyebrow">Topic</label>
+    <select id="pron-topic" data-act="pron-topic">${TOPICS.map(x=>`<option value="${x.id}" ${x.id===t.id?"selected":""}>${esc(x.title)}${x.id===todayTopic().id?" (today)":""}</option>`).join("")}</select>
+  </section>
+  ${micNotice()}
+  ${t.pron.map((s,i)=>{
+    const key=t.id+":"+i;const r=PR.res[key];const tp=PR.tips[key];const done=d.pron.includes(key);
+    const recOn=recTarget==="pr:"+key;
+    return `<div class="card">
+      <div class="spread"><span class="eyebrow">Sentence ${i+1}</span>${done?`<span class="pill good">Practised</span>`:""}</div>
+      <p class="sent">${esc(s)}</p>
+      <div class="row">
+        <button class="btn sm ghost" data-act="say" data-text="${esc(s)}">${I.play} Listen</button>
+        <button class="btn sm line" data-act="say-slow" data-text="${esc(s)}">${I.slow} Slow</button>
+        ${canRec()?`<button class="btn sm ${recOn?"rec":""}" data-act="pron-rec" data-key="${key}" data-s="${esc(s)}">${recOn?I.stop+" Stop":I.mic+" Say it"}</button>`:""}
+        ${aiOn()?`<button class="btn sm line" data-act="tips" data-key="${key}" data-s="${esc(s)}" ${PR.tipBusy[key]?"disabled":""}>${PR.tipBusy[key]?'<span class="spin"></span>':"Tips"}</button>`:""}
+      </div>
+      ${r?`<div class="spread"><div class="words">${r.words.map(w=>`<span class="w ${w.ok?"ok":"miss"}">${esc(w.w)}</span>`).join("")}</div><span class="pill ${r.score>=85?"good":r.score>=60?"mid":"bad"}">${r.score}%</span></div><p class="muted small">Heard: “${esc(r.heard)}”</p>`:""}
+      ${!canRec()?`<div class="compose"><label class="eyebrow" for="pd_${key.replace(":","_")}">Say it with your keyboard mic</label>
+        <div class="row" style="flex-wrap:nowrap"><textarea id="pd_${key.replace(":","_")}" data-draft="pd_${key}" style="min-height:48px" placeholder="Tap here, then the keyboard mic…">${esc(drafts["pd_"+key]||"")}</textarea>
+        <button class="btn sm" data-act="pron-check" data-key="${key}" data-s="${esc(s)}">Check</button></div></div>
+        <div class="row"><span class="muted small">How did it go?</span>
+        ${["good:Clear","mid:Almost","hard:Hard"].map(x=>{const [v,l]=x.split(":");return `<button class="chip" data-act="self" data-key="${key}" data-v="${v}" aria-pressed="${PR.self[key]===v}">${l}</button>`}).join("")}</div>`:""}
+      ${PR.tipErr[key]?`<p class="err">${esc(PR.tipErr[key])}</p>`:""}
+      ${tp?`<div class="fix blue">
+        ${tp.stress?`<span class="lbl">Stress</span><span>${esc(tp.stress)}</span>`:""}
+        ${tp.ipa?`<span class="lbl">IPA</span><span class="ipa">${esc(tp.ipa)}</span>`:""}
+        ${(tp.watch||[]).map(w=>`<span><b>${esc(w.word)}</b> <button class="ibtn xs" style="vertical-align:middle" data-act="say-slow" data-text="${esc(w.word)}" aria-label="Listen to ${esc(w.word)}">${I.play}</button></span><span class="ar">${esc(w.tip_ar)}</span>`).join("")}
+      </div>`:""}
+    </div>`}).join("")}
+  ${isToday?"":`<p class="muted small">Practising any topic counts toward today's pronunciation step.</p>`}
+  <div class="card">
+    <h2>Sounds Arabic speakers mix up</h2>
+    <p class="muted small">Tap a word to hear it. Say each pair back to back until they sound different.</p>
+    <div class="pairs">${PAIRS.map(p=>`<div class="pair"><span class="sound">${p.s}</span><div class="ws">${p.w.map(w=>`<button data-act="say-slow" data-text="${w}">${w}</button>`).join("")}</div><span class="ar" style="font-size:13px">${p.ar}</span></div>`).join("")}</div>
+  </div>`;
+}
+
+function vTopics(){
+  if(openTopic&&TBY[openTopic])return vTopic(TBY[openTopic]);
+  const fields=[...new Set(TOPICS.map(t=>t.field))];
+  const tt=S.level?todayTopic().id:null;
+  return `<section class="hero"><p class="eyebrow">Library · ${TOPICS.length} topics · ${TOPICS.reduce((n,t)=>n+t.v.length,0)} words</p>
+    <h1>Pick a topic</h1><p class="muted">Every topic has vocabulary, phrases, a conversation, pronunciation sentences and a speaking task.</p></section>
+  ${fields.map(f=>`<div class="card"><h2>${esc(f)}</h2><div class="tgrid">${TOPICS.filter(t=>t.field===f).map(t=>{const k=topicKnown(t);return `<button class="topic ${t.id===tt?"today":""}" data-act="open-topic" data-id="${t.id}">
+      <span class="f">${t.id===tt?"Today's topic":esc(t.field)}</span><b>${esc(t.title)}</b><span class="ar">${esc(t.ar)}</span>
+      <span class="muted small">${k}/${t.v.length} words known</span><span class="meter"><i style="width:${k/t.v.length*100}%"></i></span></button>`}).join("")}</div></div>`).join("")}`;
+}
+function vTopic(t){
+  const isToday=S.level&&t.id===todayTopic().id;
+  return `<section class="hero">
+    <div class="row"><button class="btn line sm" data-act="close-topic">${I.back} All topics</button></div>
+    <p class="eyebrow">${esc(t.field)}</p><h1>${esc(t.title)}</h1><p class="ar muted">${esc(t.ar)}</p>
+    <div class="row">
+      ${isToday?`<span class="pill good">Today's topic</span>`:`<button class="btn" data-act="make-today" data-id="${t.id}">Make it today's topic</button>`}
+      <button class="btn ghost" data-act="topic-dialogue" data-id="${t.id}">Practise the conversation</button>
+      <button class="btn line" data-act="topic-pron" data-id="${t.id}">Pronunciation</button>
+    </div>
+  </section>
+  <div class="card"><div class="spread"><h2>Vocabulary</h2><span class="muted small">${topicKnown(t)}/${t.v.length} known</span></div>
+    <div class="vlist">${t.v.map((w,i)=>{const st=S.words[wkey(t.id,i)];return `<div class="vrow"><span>${sayBtn(w[0],"xs")}</span>
+      <span class="en">${esc(w[0])} <span class="band b${w[2]}">${BAND[w[2]]}</span></span>
+      <span class="ar">${esc(w[1])}</span><span class="sub">${esc(w[3])}</span>
+      <span class="acts"><button class="known" data-act="toggle-known" data-k="${wkey(t.id,i)}" aria-pressed="${st==="known"}">${st==="known"?"Known":"Mark known"}</button></span></div>`}).join("")}</div></div>
+  <div class="card"><h2>Phrases</h2><div class="vlist">${t.ph.map(p=>`<div class="vrow"><span>${sayBtn(p[0],"xs")}</span><span class="en">${esc(p[0])}</span><span class="ar">${esc(p[1])}</span></div>`).join("")}</div></div>
+  <div class="card"><h2>Conversation: ${esc(t.dlg.title)}</h2><p class="muted small">You: ${esc(t.dlg.you)} · Other person: ${esc(t.dlg.them)}</p>
+    <div class="chat">${t.dlg.lines.map(l=>`<div class="msg ${l[0]==="t"?"ai":"me"}"><div class="bubble">${esc(l[1])}</div>${l[0]==="t"?`<div class="row">${sayBtn(l[1],"xs")}</div>`:""}</div>`).join("")}</div>
+    <div class="row"><button class="btn line sm" data-act="say" data-text="${esc(t.dlg.lines.map(l=>l[1]).join(" "))}">${I.play} Play the whole conversation</button></div></div>
+  <div class="card"><h2>Speaking tasks</h2><ul class="plain">${t.ch.map(c=>`<li>${esc(c)}</li>`).join("")}</ul></div>`;
+}
+
+function vProgress(){
+  const k=today();
+  const cells=[];for(let i=13;i>=0;i--){const key=shift(k,-i);const d=S.days[key];let c="";if(d){c=d.complete?"full":(d.vocab||d.dlg||(d.pron||[]).length||d.challenge)?"part":""}cells.push(`<span class="day ${c} ${i===0?"today":""}" title="${key}"></span>`)}
+  const completed=Object.values(S.days).filter(d=>d.complete).length;
+  const known=Object.values(S.words).filter(v=>v==="known").length;
+  const learning=Object.values(S.words).filter(v=>v==="learning").length;
+  return `<section class="hero"><p class="eyebrow">Progress</p><h1>${S.level?`Level ${S.level} · ${LNAME[S.level]}`:"No level yet"}</h1></section>
+  <div class="card">
+    <div class="stats"><div><b>${liveStreak()}</b><small>Day streak</small></div><div><b>${completed}</b><small>Full days</small></div><div><b>${known}</b><small>Words known${learning?` · ${learning} learning`:""}</small></div></div>
+    <span class="eyebrow">Last 14 days</span>
+    <div class="days">${cells.join("")}</div>
+    <p class="muted small">Dark squares are complete days, light ones are partly done.</p>
+  </div>
+  ${S.placement?vResult(S.placement,false):""}
+  <div class="card">
+    <h2>Level</h2>
+    <div class="row">
+      ${aiOn()?`<button class="btn" data-act="pt-start">Conversation interview (AI)</button>`:""}
+      <button class="btn ${aiOn()?"ghost":""}" data-act="q-start">${S.placement?"Retake quick test":"Take quick test"}</button>
+    </div>
+    <label for="lvl-pick" class="eyebrow">Or set it yourself</label>
+    <select id="lvl-pick" data-act="lvl-pick">${S.level?"":`<option value="" selected>Choose a level</option>`}${LEVELS.map(l=>`<option value="${l}" ${l===S.level?"selected":""}>${l} · ${LNAME[l]}</option>`).join("")}</select>
+  </div>
+  ${vApiCard()}`;
+}
+
+function vApiCard(){
+  if(window.claude)return "";
+  return `<div class="card" id="ai-coach">
+    <div class="spread"><h2>AI coach</h2>${API.key?`<span class="pill good">On</span>`:`<span class="pill mid">Off</span>`}</div>
+    <p class="muted small">Add your own Anthropic API key to get real conversation, corrections and feedback here. The key is saved only in this browser on this device — it is never in the page or on GitHub. Usage is billed to your API account.</p>
+    <p class="ar muted small">المفتاح بيتحفظ في المتصفح ده بس. أي حد تاني يفتح الرابط هيشوف التطبيق من غير AI ومن غير بياناتك.</p>
+    <label for="api-key" class="eyebrow">API key</label>
+    <input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="${API.key?"Saved — paste a new key to replace":"sk-ant-…"}" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font:16px var(--f-mono);background:var(--bg);color:var(--ink)">
+    <details><summary class="muted small" style="cursor:pointer">Models</summary>
+      <div class="compose" style="margin-top:8px">
+        <label for="api-model" class="eyebrow">Main model (feedback, placement)</label>
+        <input id="api-model" value="${esc(API.model)}" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:15px var(--f-mono);background:var(--bg);color:var(--ink)">
+        <label for="api-quick" class="eyebrow">Fast model (chat, tips)</label>
+        <input id="api-quick" value="${esc(API.quick)}" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:15px var(--f-mono);background:var(--bg);color:var(--ink)">
+      </div></details>
+    <div class="row"><button class="btn" data-act="api-save">Save</button>${API.key?`<button class="btn ghost" data-act="api-test">Test</button><button class="btn line" data-act="api-remove">Remove key</button>`:""}</div>
+    ${API.status?`<p class="small ${API.status.startsWith("✓")?"":"err"}">${esc(API.status)}</p>`:""}
+  </div>`;
+}
+function render(){
+  renderMeta();
+  const app=document.getElementById("app");
+  const active=document.activeElement&&document.activeElement.id;
+  let html;
+  if(view==="test"&&(P||Q))html=vTest();
+  else if(view==="talk")html=vTalk();
+  else if(view==="pron")html=vPron();
+  else if(view==="topics")html=vTopics();
+  else if(view==="progress")html=vProgress();
+  else html=vToday();
+  app.innerHTML=ttsNotice()+html;
+  if(active){const el=document.getElementById(active);if(el&&el.tagName==="TEXTAREA"){el.focus();el.selectionStart=el.selectionEnd=el.value.length}}
+}
+function go(v){stopRec();view=v;render();window.scrollTo(0,0)}
+
+/* ================= events ================= */
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.draft;if(k)drafts[k]=e.target.value});
+document.addEventListener("change",e=>{
+  const a=e.target.dataset&&e.target.dataset.act;
+  if(a==="autospeak"){S.autoSpeak=e.target.checked;save()}
+  else if(a==="lvl-pick"&&e.target.value){S.level=e.target.value;FC=null;save();render()}
+  else if(a==="dlg-topic"){stopRec();startDialogue(e.target.value);drafts["dlg"]="";render()}
+  else if(a==="pron-topic"){pronTopic=e.target.value;render()}
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){const id=e.target.id;if(id==="talk")sendTalk();if(id==="pt")sendPlacement();if(id==="ch")sendChallenge();if(id==="dlg")sendDialogue()}
+});
+document.addEventListener("click",e=>{
+  const tab=e.target.closest("[data-tab]");
+  if(tab){const v=tab.dataset.tab;if(v==="topics"&&view==="topics")openTopic=null;go(v);return}
+  const b=e.target.closest("[data-act]");if(!b||b.tagName==="SELECT"||b.tagName==="INPUT")return;
+  const a=b.dataset.act;
+  switch(a){
+    case "say":speak(b.dataset.text,0.95);break;
+    case "say-slow":speak(b.dataset.text,0.65);break;
+    case "q-start":startQuick();break;
+    case "q-ans":answerQuick(Number(b.dataset.k));break;
+    case "pt-start":startPlacement();break;
+    case "pt-send":sendPlacement();break;
+    case "test-cancel":P=null;Q=null;go(S.level?"progress":"today");break;
+    case "go-today":P=null;Q=null;FC=null;go("today");break;
+    case "set-level":S.level=b.dataset.l;FC=null;save();render();break;
+    case "fc-reveal":FC.reveal=true;const w=TBY[FC.tid].v[FC.queue[0]];render();speak(w[3]);break;
+    case "fc-ok":flashAnswer(true);break;
+    case "fc-again":flashAnswer(false);break;
+    case "go-dialogue":{const t=todayTopic();talkMode="dialogue";if(!G||G.tid!==t.id||G.done)startDialogue(t.id);go("talk");break}
+    case "go-pron":pronTopic=null;go("pron");break;
+    case "dlg-send":sendDialogue();break;
+    case "dlg-hint":G.showModel=!G.showModel;render();break;
+    case "dlg-restart":stopRec();startDialogue(G.tid);drafts["dlg"]="";render();window.scrollTo(0,0);break;
+    case "tmode":stopRec();talkMode=b.dataset.m;render();break;
+    case "talk-send":sendTalk();break;
+    case "talk-reset":T.msgs=[];T.err="";render();break;
+    case "ch-send":sendChallenge();break;
+    case "ch-redo":drafts["ch"]=D().challenge.answer;D().challenge=null;save();render();break;
+    case "tips":getTips(b.dataset.key,b.dataset.s);break;
+    case "go-ai":go("progress");requestAnimationFrame(()=>{const el=document.getElementById("ai-coach");if(el)el.scrollIntoView({block:"start"})});break;
+    case "api-save":{
+      const k=(document.getElementById("api-key").value||"").trim();
+      const m=(document.getElementById("api-model")||{}).value,q=(document.getElementById("api-quick")||{}).value;
+      if(k)API.key=k;if(m&&m.trim())API.model=m.trim();if(q&&q.trim())API.quick=q.trim();
+      try{localStorage.setItem("fh-api-key",API.key);localStorage.setItem("fh-api-model",API.model);localStorage.setItem("fh-api-quick",API.quick)}catch(e){API.status="This browser can't save the key (private mode?)."}
+      useApiIfSet();if(!API.status||API.status.startsWith("✓"))API.status=API.key?"Saved. Tap Test to check it.":"Paste a key first.";render();break}
+    case "api-test":{API.status="Testing…";render();
+      Promise.all([apiJson('Reply with only this JSON: {"ok":true}',{modelTier:"quick"}),apiJson('Reply with only this JSON: {"ok":true}',{})])
+        .then(()=>{API.status="✓ Works. Both models answered."}).catch(e=>{API.status=errMsg(e)}).finally(render);break}
+    case "api-remove":API.key="";API.status="Key removed from this browser.";try{localStorage.removeItem("fh-api-key")}catch(e){}useApiIfSet();render();break;
+    case "pron-check":{const key=b.dataset.key;const heard=(drafts["pd_"+key]||"").trim();if(!heard)break;const c=compare(b.dataset.s,heard);PR.res[key]={...c,heard};markPron(key);render();break}
+    case "self":PR.self[b.dataset.key]=b.dataset.v;markPron(b.dataset.key);render();break;
+    case "open-topic":openTopic=b.dataset.id;render();window.scrollTo(0,0);break;
+    case "close-topic":openTopic=null;render();window.scrollTo(0,0);break;
+    case "make-today":setTodayTopic(b.dataset.id);openTopic=null;go("today");break;
+    case "topic-dialogue":talkMode="dialogue";startDialogue(b.dataset.id);drafts["dlg"]="";go("talk");break;
+    case "topic-pron":pronTopic=b.dataset.id;go("pron");break;
+    case "toggle-known":{const k=b.dataset.k;S.words[k]=S.words[k]==="known"?"learning":"known";save();render();break}
+    case "mic":{
+      const t=b.dataset.target;
+      if(recTarget===t){stopRec();break}
+      const base=(drafts[t]||"").trim();
+      startRec(t,txt=>{drafts[t]=(base?base+" ":"")+txt;const el=document.getElementById(t);if(el)el.value=drafts[t]},()=>{});
+      break}
+    case "pron-rec":{
+      const key=b.dataset.key,s=b.dataset.s,tgt="pr:"+key;
+      if(recTarget===tgt){stopRec();break}
+      startRec(tgt,()=>{},heard=>{if(heard){const c=compare(s,heard);PR.res[key]={...c,heard};markPron(key)}});
+      break}
+  }
+});
+
+render();
+initRuntime();
+</script>
+
+</body>
+</html>
